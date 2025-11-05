@@ -1,0 +1,528 @@
+{
+  "prefixes": {
+    "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "unit": "http://qudt.org/vocab/unit/",
+    "hyobs":"https://w3id.org/hmontology/",
+    "envthes":"http://vocabs.lter-europe.net/EnvThes/",
+    "schema":"http://schema.org/",
+    "xsd":  "http://www.w3.org/2001/XMLSchema#"
+  },
+
+  "context": {
+    "columns": { "id": "OBJECTID", "date": null, "time": null },
+    "uri_templates": {
+      "catchment":  "hyobs:catchment_{id}",
+      "sensor":     "hyobs:sensor_{id}",
+      "collection": "sosa:observationCollection_{id}",
+      "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+    },
+    "time_defaults": {}
+  },
+
+  "rules": {
+    "Station": [
+      ["@subject", "@sensor"],
+      ["rdf:type", "sosa:Sensor"],
+      ["schema:name", "^^xsd:string"],
+      ["hyobs:monitorsCatchment", "@catchment"]
+    ],
+
+    "OBJECTID": [
+      ["@subject", "@catchment"],
+      ["hyobs:objectId", "^^xsd:integer"]
+    ],
+
+    "Area_km2": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasCatchmentAreaKm2", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:KiloM2"]
+      ]]
+    ],
+
+    "f_AreaGer": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fractionAreaInGermany", "^^xsd:decimal"]
+    ],
+
+    "dem.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:meanElevation", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "dem.median": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:medianElevation", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "slo.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:slopeMean", "^^xsd:decimal"]
+    ],
+
+    "slo.median": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:slopeMedian", "^^xsd:decimal"]
+    ],
+
+    "twi.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:twiMean", "^^xsd:decimal"]
+    ],
+    "twi.med": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:twiMedian", "^^xsd:decimal"]
+    ],
+    "twi.90p": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:twiP90", "^^xsd:decimal"]
+    ],
+
+    "ddhad": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:ddhad", "^^xsd:decimal"]
+    ],
+
+    "DrainDens": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:drainageDensity", "^^xsd:decimal"]
+    ],
+
+    "pdens": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:populationDensityPerKm2", "^^xsd:decimal"]
+    ],
+
+    "N_T_YKM2": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nitrogenTotalYieldPerKm2PerYear", "^^xsd:decimal"]
+    ],
+    "P_T_YKM2": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusTotalYieldPerKm2PerYear", "^^xsd:decimal"]
+    ],
+    "BOD_T_YKM2": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:bodTotalYieldPerKm2PerYear", "^^xsd:decimal"]
+    ],
+    "N_T_YEW": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nitrogenTotalYieldYEW", "^^xsd:decimal"]
+    ],
+    "P_T_YEW": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusTotalYieldYEW", "^^xsd:decimal"]
+    ],
+    "nEW": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:ewCount", "^^xsd:integer"]
+    ],
+    "n_UWWTP": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:uwwtpCount", "^^xsd:integer"]
+    ],
+
+    "thetaS": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilThetaS", "^^xsd:decimal"]
+    ],
+    "WaterRoots": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:rootZoneAvailableWater", "^^xsd:decimal"]
+    ],
+    "soilP.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilPhosphorusMean", "^^xsd:decimal"]
+    ],
+    "soilN.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilNitrogenMean", "^^xsd:decimal"]
+    ],
+    "soilCN.mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilCarbonNitrogenRatioMean", "^^xsd:decimal"]
+    ],
+
+    "P_mm": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipitationAnnualMm", "^^xsd:decimal"]
+    ],
+    "P_SIsw": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipSeasonalityIndexSw", "^^xsd:decimal"]
+    ],
+    "P_SI": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipSeasonalityIndex", "^^xsd:decimal"]
+    ],
+    "P_lambda": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipLambda", "^^xsd:decimal"]
+    ],
+    "P_alpha": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipAlpha", "^^xsd:decimal"]
+    ],
+    "PET_mm": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:petAnnualMm", "^^xsd:decimal"]
+    ],
+    "AI": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:aridityIndex", "^^xsd:decimal"]
+    ],
+    "T_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:airTemperatureMeanAnnual", "^^xsd:decimal"]
+    ],
+
+    "Q_StartDate": [
+      ["@subject", "@catchment"],
+      ["hyobs:qStartDate", "^^xsd:date"]
+    ],
+    "Q_EndDate": [
+      ["@subject", "@catchment"],
+      ["hyobs:qEndDate", "^^xsd:date"]
+    ],
+    "Q_gaps": [
+      ["@subject", "@catchment"],
+      ["hyobs:qGapsFraction", "^^xsd:decimal"]
+    ],
+    "Q_nNAs": [
+      ["@subject", "@catchment"],
+      ["hyobs:qMissingCount", "^^xsd:integer"]
+    ],
+    "Q_mean": [
+      ["@subject", "@catchment"],
+      ["hyobs:qMean", "^^xsd:decimal"]
+    ],
+    "Q_median": [
+      ["@subject", "@catchment"],
+      ["hyobs:qMedian", "^^xsd:decimal"]
+    ],
+    "Q_spec": [
+      ["@subject", "@catchment"],
+      ["hyobs:qSpecificDischarge", "^^xsd:decimal"]
+    ],
+    "Q_CVQ": [
+      ["@subject", "@catchment"],
+      ["hyobs:qCoefficientOfVariation", "^^xsd:decimal"]
+    ],
+    "Q_medSum": [
+      ["@subject", "@catchment"],
+      ["hyobs:qMedianSummer", "^^xsd:decimal"]
+    ],
+    "Q_medWin": [
+      ["@subject", "@catchment"],
+      ["hyobs:qMedianWinter", "^^xsd:decimal"]
+    ],
+    "Q_Sum2Win": [
+      ["@subject", "@catchment"],
+      ["hyobs:qSummerToWinterRatio", "^^xsd:decimal"]
+    ],
+
+    "flashi": [
+      ["@subject", "@catchment"],
+      ["hyobs:flashinessIndex", "^^xsd:decimal"]
+    ],
+    "BFI": [
+      ["@subject", "@catchment"],
+      ["hyobs:baseflowIndex", "^^xsd:decimal"]
+    ],
+
+    "soilpH_CaCl": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilPhCaCl", "^^xsd:decimal"]
+    ],
+    "soilpH_H2O": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:soilPhH2O", "^^xsd:decimal"]
+    ],
+
+    "P_available_agri": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusAvailableAgricultural", "^^xsd:decimal"]
+    ],
+    "P_available": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusAvailable", "^^xsd:decimal"]
+    ],
+    "P_total_agri": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusTotalAgricultural", "^^xsd:decimal"]
+    ],
+    "P_total": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusTotal", "^^xsd:decimal"]
+    ],
+    "P_atm_depo": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusAtmosphericDeposition", "^^xsd:decimal"]
+    ],
+    "P_chem": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusChemicalFertilizer", "^^xsd:decimal"]
+    ],
+    "Fert_perHa": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fertilizerPerHa", "^^xsd:decimal"]
+    ],
+    "Manure_Ha": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:manurePerHa", "^^xsd:decimal"]
+    ],
+    "P_input": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusInput", "^^xsd:decimal"]
+    ],
+    "P_removal_Ha": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusRemovalPerHa", "^^xsd:decimal"]
+    ],
+    "P_uptake_Ha": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusUptakePerHa", "^^xsd:decimal"]
+    ],
+    "P_output_Ha": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusOutputPerHa", "^^xsd:decimal"]
+    ],
+    "P_surplus": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:phosphorusSurplus", "^^xsd:decimal"]
+    ],
+
+    "strahler_order": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:strahlerOrder", "^^xsd:integer"]
+    ],
+
+    "Npoint_Pop_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nPointPopulation1991", "^^xsd:decimal"]
+    ],
+    "Npoint_WWTP_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nPointWwtp1991", "^^xsd:decimal"]
+    ],
+    "Nsurp_Batool_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nSurplusBatool1991", "^^xsd:decimal"]
+    ],
+    "Nsurp_Haussermann_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nSurplusHaussermann1991", "^^xsd:decimal"]
+    ],
+    "Ppoint_Pop_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pPointPopulation1991", "^^xsd:decimal"]
+    ],
+    "Ppoint_WWTP_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pPointWwtp1991", "^^xsd:decimal"]
+    ],
+    "Psurp_Batool_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pSurplusBatool1991", "^^xsd:decimal"]
+    ],
+
+    "Npoint_Pop_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nPointPopulation2010", "^^xsd:decimal"]
+    ],
+    "Npoint_WWTP_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nPointWwtp2010", "^^xsd:decimal"]
+    ],
+    "Nsurp_Batool_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nSurplusBatool2010", "^^xsd:decimal"]
+    ],
+    "Nsurp_Haussermann_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:nSurplusHaussermann2010", "^^xsd:decimal"]
+    ],
+    "Ppoint_Pop_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pPointPopulation2010", "^^xsd:decimal"]
+    ],
+    "Ppoint_WWTP_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pPointWwtp2010", "^^xsd:decimal"]
+    ],
+    "Psurp_Batool_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:pSurplusBatool2010", "^^xsd:decimal"]
+    ],
+
+    "f_Npoint_Pop_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fractionNPointPopulation1991", "^^xsd:decimal"]
+    ],
+    "f_Npoint_WTTP_from1991": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fractionNPointWwtp1991", "^^xsd:decimal"]
+    ],
+    "f_Npoint_Pop_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fractionNPointPopulation2010", "^^xsd:decimal"]
+    ],
+    "f_Npoint_WTTP_from2010": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:fractionNPointWwtp2010", "^^xsd:decimal"]
+    ],
+
+    "f_artif":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionArtif","^^xsd:decimal"]],
+    "f_agric":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgric","^^xsd:decimal"]],
+    "f_forest":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionForest","^^xsd:decimal"]],
+    "f_wetl":    [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionWetl","^^xsd:decimal"]],
+    "f_water":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionWater","^^xsd:decimal"]],
+    "f_urban":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionUrban","^^xsd:decimal"]],
+    "f_industry":[["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionIndustry","^^xsd:decimal"]],
+    "f_mine":    [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionMine","^^xsd:decimal"]],
+    "f_urban_veg":[["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionUrbanVeg","^^xsd:decimal"]],
+    "f_arable":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionArable","^^xsd:decimal"]],
+    "f_agri_perm":[["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgriPerm","^^xsd:decimal"]],
+    "f_pastures":[["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPastures","^^xsd:decimal"]],
+    "f_agri_hetero":[["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgriHetero","^^xsd:decimal"]],
+    "f_fores":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionFores","^^xsd:decimal"]],
+    "f_scrub":   [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionScrub","^^xsd:decimal"]],
+    "f_open":    [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionOpen","^^xsd:decimal"]],
+
+    "f_calc": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionCalc","^^xsd:decimal"]],
+    "f_calc_sed": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionCalcSed","^^xsd:decimal"]],
+    "f_magma": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionMagma","^^xsd:decimal"]],
+    "f_metam": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionMetam","^^xsd:decimal"]],
+    "f_sedim": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionSedim","^^xsd:decimal"]],
+    "f_silic": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionSilic","^^xsd:decimal"]],
+    "f_sili_sed": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionSiliSed","^^xsd:decimal"]],
+    "f_consol": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionConsol","^^xsd:decimal"]],
+    "f_part_consol": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPartConsol","^^xsd:decimal"]],
+    "f_unconsol": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionUnconsol","^^xsd:decimal"]],
+    "f_porous": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPorous","^^xsd:decimal"]],
+    "f_porous1": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPorous1","^^xsd:decimal"]],
+    "f_porous2": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPorous2","^^xsd:decimal"]],
+    "f_fissured": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionFissured","^^xsd:decimal"]],
+    "f_fiss1": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionFiss1","^^xsd:decimal"]],
+    "f_fiss2": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionFiss2","^^xsd:decimal"]],
+    "f_hard": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionHard","^^xsd:decimal"]],
+    "f_hard1": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionHard1","^^xsd:decimal"]],
+    "f_hard2": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionHard2","^^xsd:decimal"]],
+    "f_inwater": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionInwater","^^xsd:decimal"]],
+    "f_ice": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionIce","^^xsd:decimal"]],
+
+    "f_gwsoils": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionGwsoils","^^xsd:decimal"]],
+    "f_sand": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionSand","^^xsd:decimal"]],
+    "f_silt": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionSilt","^^xsd:decimal"]],
+    "f_clay": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionClay","^^xsd:decimal"]],
+    "f_clay_agri": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionClayAgri","^^xsd:decimal"]],
+
+    "f_agric_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgric2018","^^xsd:decimal"]],
+    "f_artif_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionArtif2018","^^xsd:decimal"]],
+    "f_forest_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionForest2018","^^xsd:decimal"]],
+    "f_wetl_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionWetl2018","^^xsd:decimal"]],
+    "f_water_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionWater2018","^^xsd:decimal"]],
+    "f_arable_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionArable2018","^^xsd:decimal"]],
+    "f_fores_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionFores2018","^^xsd:decimal"]],
+    "f_pastures_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionPastures2018","^^xsd:decimal"]],
+    "f_urban_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionUrban2018","^^xsd:decimal"]],
+    "f_agri_hetero_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgriHetero2018","^^xsd:decimal"]],
+    "f_industry_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionIndustry2018","^^xsd:decimal"]],
+    "f_mine_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionMine2018","^^xsd:decimal"]],
+    "f_scrub_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionScrub2018","^^xsd:decimal"]],
+    "f_urban_veg_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionUrbanVeg2018","^^xsd:decimal"]],
+    "f_agri_perm_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionAgriPerm2018","^^xsd:decimal"]],
+    "f_open_18": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:fractionOpen2018","^^xsd:decimal"]],
+
+    "lai_1":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM01","^^xsd:decimal"]],
+    "lai_2":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM02","^^xsd:decimal"]],
+    "lai_3":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM03","^^xsd:decimal"]],
+    "lai_4":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM04","^^xsd:decimal"]],
+    "lai_5":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM05","^^xsd:decimal"]],
+    "lai_6":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM06","^^xsd:decimal"]],
+    "lai_7":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM07","^^xsd:decimal"]],
+    "lai_8":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM08","^^xsd:decimal"]],
+    "lai_9":  [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM09","^^xsd:decimal"]],
+    "lai_10": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM10","^^xsd:decimal"]],
+    "lai_11": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM11","^^xsd:decimal"]],
+    "lai_12": [["@subject","@catchment"],["rdf:type","envthes:30212"],["hyobs:leafAreaIndexM12","^^xsd:decimal"]]
+  }
+}
