@@ -66,6 +66,8 @@ hydroturtle shp stations.shp mapping_points.json out.ttl --src-crs EPSG:25833
 ```bash
 hydroturtle shp catchments.shp mapping_polygons.json out.ttl --id-field GAUGE_ID
 ```
+---
+
 ## Mapping files (JSON)
 Each mapping provides:
 

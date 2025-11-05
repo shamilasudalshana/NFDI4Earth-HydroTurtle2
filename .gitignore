@@ -28,3 +28,6 @@ dist/
 *.ttl.gz
 *.csv
 *.log
+
+#Notebooks
+.ipynb_checkpoints/

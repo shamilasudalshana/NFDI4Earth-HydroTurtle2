@@ -30,11 +30,16 @@ def _expand_token(token, row, row_index, ctx):
         return ctx["uri_templates"]["sensor"].format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
     if token == "@collection":
         return ctx["uri_templates"]["collection"].format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
+    if token == "@geom":
+        # use template if present; else default
+        geom_tpl = ctx["uri_templates"].get("geom", "hyobs:geomPoint_{id}")
+        return geom_tpl.format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
     if token == "@resultTime":
         t = ctx["time_defaults"]["resultTime"]
         cols = [row[c.lstrip("$")] for c in t["from"]]
         return _iso_datetime_from(cols, t.get("format", []))
     return token
+
 
 # --- value evaluators --------------------------------------------------------
 def _eval_object(obj, row, row_index, ctx):
@@ -84,6 +89,9 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
     prefixes = mapping["prefixes"]
     rules = mapping["rules"]
 
+    # >>> compat switch (default True to preserve old behavior)
+    use_legacy = mapping.get("compat", {}).get("typed_literal_shorthand", True)
+
     triples_by_subject = {}
 
     def add_triple(s, p, o):
@@ -113,20 +121,22 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
                 spec_iter = iter(spec)
 
             for entry in spec_iter:
-                p = entry[0]
-                o = entry[1]
+                p, o = entry[0], entry[1]
 
-                # typed literal shorthand at top-level (e.g., "^^xsd:decimal")
-                if isinstance(o, str) and o.startswith("^^"):
+                if use_legacy and isinstance(o, str) and o.startswith("^^"):
                     csv_val = row[col]
                     o_eval = f"\"{csv_val}\"^^{o[2:]}"
                 else:
-                    o_eval = _eval_object(o, row, i, ctx)
-                    # inject CSV value for ANY ^^xsd:* placeholder inside bnodes, etc.
-                    o_eval = re.sub(r'(?<!")\^\^(xsd:[A-Za-z0-9_\-]+)',
-                                    lambda m: f"\"{row[col]}\"^^{m.group(1)}",
-                                    str(o_eval))
+                    o_eval = _render_obj(
+                        o, row,
+                        row_index=i,
+                        ctx=ctx,
+                        current_col=col,
+                        use_legacy=use_legacy
+                    )
+
                 add_triple(s, p, o_eval)
+
 
     return triples_by_subject, prefixes
 
@@ -197,4 +207,69 @@ def iter_rows(csv_path: str, csv_encoding: str | None = None):
     # 4) last resort: never crash (may replace bad bytes)
     # print("[hydroturtle] Falling back to utf-8 with replacement.")
     yield from _yield_with("utf-8", strict=False)
+
+# hydroturtle/core/evaluator.py
+
+def _render_template(tpl: str, mapping: dict) -> str:
+    return tpl.format(**mapping)
+
+def eval_value(spec, row):
+    # primitive string (already a QName/IRI or typed literal marker)
+    if isinstance(spec, str):
+        return spec
+
+    # object specs
+    if isinstance(spec, dict):
+        # Column reference
+        if "@col" in spec:
+            v = row.get(spec["@col"], "")
+            cast = spec.get("as")
+            if cast and cast.startswith("^^"):  # typed literal
+                return f"\"{v}\"{cast}"
+            return str(v)
+
+        # Template expansion (for WKT, etc.)
+        if "@template" in spec:
+            tpl = spec["@template"]
+            src = spec.get("from", {})
+            resolved = {}
+            for k, v in src.items():
+                if isinstance(v, dict) and "@col" in v:
+                    resolved[k] = str(row.get(v["@col"], ""))
+                else:
+                    resolved[k] = str(v)
+            lit = _render_template(tpl, resolved)
+            cast = spec.get("as")
+            return f"\"{lit}\"{cast}" if cast else f"\"{lit}\""
+
+        # (Optional) point reprojection block could go here later:
+        # if "@point" in spec:  ...  (convert easting/northing -> lon/lat)
+
+    # fallback
+    return str(spec)
+
+# add row_index and ctx params
+def _render_obj(spec, row, row_index=None, ctx=None, current_col=None, use_legacy=True):
+    # Legacy typed-literal shorthand: "^^xsd:TYPE" => use row[current_col]
+    if use_legacy and isinstance(spec, str) and spec.startswith("^^"):
+        v = row.get(current_col, "")
+        return f"\"{v}\"^^{spec[2:]}"
+
+    # NEW: expand @tokens like @catchment, @sensor, @geom, @collection, @resultTime
+    if isinstance(spec, str) and spec.startswith("@"):
+        # reuse your existing expander
+        return _expand_token(spec, row, row_index, ctx)
+
+    # Inline bnode: [["p","o"], ...]
+    if isinstance(spec, list) and spec and isinstance(spec[0], list) and len(spec[0]) == 2:
+        parts = []
+        for p, o in spec:
+            parts.append(
+                f"{p} {_render_obj(o, row, row_index=row_index, ctx=ctx, current_col=current_col, use_legacy=use_legacy)}"
+            )
+        return "[ " + " ; ".join(parts) + " ]"
+
+    # Dict or plain string
+    return eval_value(spec, row) if isinstance(spec, (dict, str)) else str(spec)
+
 
