@@ -27,7 +27,8 @@ def main():
     sp_shp.add_argument("shapefile")
     sp_shp.add_argument("mapping")
     sp_shp.add_argument("out")
-    sp_shp.add_argument("--id-field", default="OBJECTID")
+    sp_shp.add_argument("--id-field", default=None, 
+                        help="attribute name holding the unique ID (defaults to mapping.context.columns.id, else OBJECTID)")
     sp_shp.add_argument("--src-crs", default=None)
     sp_shp.add_argument("--json-encoding", default="utf-8")
 

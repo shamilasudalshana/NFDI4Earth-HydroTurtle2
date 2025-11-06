@@ -31,12 +31,16 @@ def _emit(triples_by_subject: Dict[str, List[Tuple[str, str]]], s: str, p: str, 
     triples_by_subject.setdefault(s, []).append((p, o))
 
 def run_convert_shp(shp_path: str, mapping_path: str, out_path: str,
-                    id_field: str = "OBJECTID",
+                    id_field: str | None = None,
                     src_crs_override: str | None = None,
                     json_encoding: str = "utf-8"):
     mapping = load_mapping(mapping_path, json_encoding=json_encoding)
     prefixes = mapping["prefixes"]
     ctx = mapping["context"]
+
+    # Resolve ID field: CLI > mapping.context.columns.id > fallback
+    mapping_id = ctx.get("columns", {}).get("id")
+    id_field_final = id_field or mapping_id or "OBJECTID"
 
     # Pre-validate required templates
     ctx.setdefault("uri_templates", {})
@@ -46,7 +50,7 @@ def run_convert_shp(shp_path: str, mapping_path: str, out_path: str,
 
     triples_by_subject: Dict[str, List[Tuple[str, str]]] = {}
 
-    for feat in iter_features(shp_path, id_field=id_field, src_crs_override=src_crs_override):
+    for feat in iter_features(shp_path, id_field=id_field_final, src_crs_override=src_crs_override):
         fid = feat["id"]
         props = feat["props"]
         geom = feat["geom"]
