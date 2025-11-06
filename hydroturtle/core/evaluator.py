@@ -23,22 +23,31 @@ def _iso_datetime_from(parts, fmts):
     except Exception:
         raise ValueError(f"Could not parse date '{s}' with formats {fmts} or ISO YYYY-MM-DD")
 
-def _expand_token(token, row, row_index, ctx):
+def _expand_token(token, row, row_index, ctx, slug: str | None = None):
+    def _rid():
+        id_col = ctx["columns"].get("id")
+        return row.get(id_col) if id_col else row.get("__RID__", "")
+
     if token == "@catchment":
-        return ctx["uri_templates"]["catchment"].format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
+        return ctx["uri_templates"]["catchment"].format(id=_rid(), rowIndex=row_index)
     if token == "@sensor":
-        return ctx["uri_templates"]["sensor"].format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
+        return ctx["uri_templates"]["sensor"].format(id=_rid(), rowIndex=row_index)
     if token == "@collection":
-        return ctx["uri_templates"]["collection"].format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
-    if token == "@geom":
-        # use template if present; else default
-        geom_tpl = ctx["uri_templates"].get("geom", "hyobs:geomPoint_{id}")
-        return geom_tpl.format(id=row[ctx["columns"]["id"]], rowIndex=row_index)
+        return ctx["uri_templates"]["collection"].format(id=_rid(), rowIndex=row_index)
+    if token == "@observation":
+        # need slug to distinguish variables (precipitation, pet, …)
+        slug_val = (slug or "").lower() or "obs"
+        tpl = ctx["uri_templates"].get(
+            "observation",
+            "hyobs:observation_{id}_{rowIndex}_{slug}"
+        )
+        return tpl.format(id=_rid(), rowIndex=row_index, slug=slug_val)
     if token == "@resultTime":
         t = ctx["time_defaults"]["resultTime"]
         cols = [row[c.lstrip("$")] for c in t["from"]]
         return _iso_datetime_from(cols, t.get("format", []))
     return token
+
 
 
 # --- value evaluators --------------------------------------------------------
@@ -89,35 +98,44 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
     prefixes = mapping["prefixes"]
     rules = mapping["rules"]
 
-    # >>> compat switch (default True to preserve old behavior)
+    # compat switch (preserve old ^^xsd:* shorthand)
     use_legacy = mapping.get("compat", {}).get("typed_literal_shorthand", True)
 
     triples_by_subject = {}
-
     def add_triple(s, p, o):
         triples_by_subject.setdefault(s, []).append((p, o))
 
-    # >>> pass csv_encoding here <<<
+    # NEW: figure out a file-scoped ID if mapping wants it
+    file_id = _derive_id_from_filename(csv_path, ctx)
+
     for i, row in enumerate(iter_rows(csv_path, csv_encoding=csv_encoding)):
+        # compute the chosen row id (column id OR filename id)
+        rid = _row_id(row, ctx, file_id)
+        # row2 carries the resolved id for all helper expansions
+        row2 = dict(row)
+        row2["__RID__"] = rid
+
         for col, spec in rules.items():
-            if col not in row or row[col] in (None, "", "NA"):
+            val = row.get(col)
+            if val is None:
+                continue
+            if isinstance(val, str) and val.strip().lower() in {"", "na", "nan"}:
                 continue
 
             subj_tpl = ctx["uri_templates"].get("observation", "hyobs:observation_{id}_{rowIndex}")
             slug = col.lower()
-            s = subj_tpl.format(id=row[ctx["columns"]["id"]], rowIndex=i, slug=slug)
+            s = subj_tpl.format(id=rid, rowIndex=i, slug=slug)
 
-            # allow first entry to override subject: ["@subject", "@sensor"] or ["@subject", "@catchment"]
+            # allow first entry to override subject
             spec_iter = iter(spec)
             first = next(spec_iter)
             if isinstance(first, list) and first and first[0] == "@subject":
-                subj_token = first[1]  # "@sensor" | "@catchment" | "@collection" | custom template
-                if subj_token.startswith("@"):
-                    s = _expand_token(subj_token, row, i, ctx)
+                subj_token = first[1]  # "@sensor" | "@catchment" | "@collection" | template
+                if isinstance(subj_token, str) and subj_token.startswith("@"):
+                    s = _expand_token(subj_token, row2, i, ctx, slug=slug)
                 else:
-                    s = subj_token.format(id=row[ctx["columns"]["id"]], rowIndex=i, slug=slug)
+                    s = str(subj_token).format(id=rid, rowIndex=i, slug=slug)
             else:
-                # didn't override; put the first back
                 spec_iter = iter(spec)
 
             for entry in spec_iter:
@@ -128,7 +146,7 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
                     o_eval = f"\"{csv_val}\"^^{o[2:]}"
                 else:
                     o_eval = _render_obj(
-                        o, row,
+                        o, row2,
                         row_index=i,
                         ctx=ctx,
                         current_col=col,
@@ -137,8 +155,8 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
 
                 add_triple(s, p, o_eval)
 
-
     return triples_by_subject, prefixes
+
 
 def run_convert(csv_path, mapping_path, out_path):
     triples_by_subject, prefixes = convert(csv_path, load_mapping(mapping_path))
@@ -241,6 +259,28 @@ def eval_value(spec, row):
             lit = _render_template(tpl, resolved)
             cast = spec.get("as")
             return f"\"{lit}\"{cast}" if cast else f"\"{lit}\""
+        
+        # --- reprojection directive ---
+        if "@point" in spec:
+            pt = spec["@point"]
+            E = float(row.get(pt["easting"]["@col"]))
+            N = float(row.get(pt["northing"]["@col"]))
+            src = pt.get("src_crs")
+            dst = pt.get("dst_crs", "EPSG:4326")
+
+            from pyproj import Transformer
+            tf = Transformer.from_crs(src, dst, always_xy=True)
+            lon, lat = tf.transform(E, N)
+
+            # you can round if you like
+            lon_s = f"{lon:.8f}"
+            lat_s = f"{lat:.8f}"
+
+            # merge into template vars
+            tpl = spec["@template"]
+            lit = tpl.format(lon=lon_s, lat=lat_s)
+            cast = spec.get("as")
+            return f"\"{lit}\"{cast}" if cast else f"\"{lit}\"" 
 
         # (Optional) point reprojection block could go here later:
         # if "@point" in spec:  ...  (convert easting/northing -> lon/lat)
@@ -248,28 +288,83 @@ def eval_value(spec, row):
     # fallback
     return str(spec)
 
-# add row_index and ctx params
-def _render_obj(spec, row, row_index=None, ctx=None, current_col=None, use_legacy=True):
-    # Legacy typed-literal shorthand: "^^xsd:TYPE" => use row[current_col]
+def _render_obj(spec, row, row_index, ctx, current_col=None, use_legacy=True):
+    # 1) typed-literal shorthand anywhere (nested or top-level)
     if use_legacy and isinstance(spec, str) and spec.startswith("^^"):
-        v = row.get(current_col, "")
-        return f"\"{v}\"^^{spec[2:]}"
+        # use the CSV value of the column whose rule we're currently executing
+        v = "" if current_col is None else row.get(current_col, "")
+        return f"\"{v}\"{spec}"  # e.g. -> "31"^^xsd:integer
 
-    # NEW: expand @tokens like @catchment, @sensor, @geom, @collection, @resultTime
-    if isinstance(spec, str) and spec.startswith("@"):
-        # reuse your existing expander
-        return _expand_token(spec, row, row_index, ctx)
+    # 2) plain strings: tokens, QNames/IRIs, normal literals
+    if isinstance(spec, str):
+        if spec.startswith("@"):
+            return _expand_token(spec, row, row_index, ctx, slug=(current_col or "").lower())
+        return spec
 
-    # Inline bnode: [["p","o"], ...]
+    # 3) ["select", "$col", ["Case","IRI"], ..., ["default","IRI"]]
+    if isinstance(spec, list) and spec and spec[0] == "select":
+        _, keyexpr, *pairs = spec
+        key = row.get(keyexpr.lstrip("$"), "")
+        default_val, chosen = None, None
+        for k, v in pairs:
+            if k == "default":
+                default_val = v
+            elif str(key) == str(k):
+                chosen = v
+                break
+        return chosen if chosen is not None else (default_val if default_val is not None else str(key))
+
+    # 4) blank node: list of [p, o] pairs
     if isinstance(spec, list) and spec and isinstance(spec[0], list) and len(spec[0]) == 2:
         parts = []
         for p, o in spec:
-            parts.append(
-                f"{p} {_render_obj(o, row, row_index=row_index, ctx=ctx, current_col=current_col, use_legacy=use_legacy)}"
-            )
+            o_eval = _render_obj(o, row, row_index, ctx, current_col=current_col, use_legacy=use_legacy)
+            parts.append(f"{p} {o_eval}")
         return "[ " + " ; ".join(parts) + " ]"
 
-    # Dict or plain string
-    return eval_value(spec, row) if isinstance(spec, (dict, str)) else str(spec)
+    # 5) dict objects (@col / @template)
+    if isinstance(spec, dict):
+        if "@col" in spec:
+            v = row.get(spec["@col"], "")
+            cast = spec.get("as")
+            return f"\"{v}\"{cast}" if cast and cast.startswith("^^") else str(v)
+        if "@template" in spec:
+            tpl = spec["@template"]
+            src = spec.get("from", {})
+            resolved = {k: (str(row.get(v["@col"], "")) if isinstance(v, dict) and "@col" in v else str(v))
+                        for k, v in src.items()}
+            lit = _render_template(tpl, resolved)
+            cast = spec.get("as")
+            # WKT etc. should be a quoted literal if cast is present
+            return f"\"{lit}\"{cast}" if cast else lit
+
+    # 6) fallback
+    return str(spec)
+
+
+
+# --- helpers ---------------------------------------------------------------
+import re
+from pathlib import Path
+
+def _derive_id_from_filename(csv_path: str, ctx: dict) -> str | None:
+    d = (ctx or {}).get("derive", {}).get("id_from_filename")
+    if not d:
+        return None
+    pat = d.get("regex")
+    grp = d.get("group", 1)
+    if not pat:
+        return None
+    m = re.search(pat, Path(csv_path).name)
+    return m.group(grp) if m else None
+
+def _row_id(row: dict, ctx: dict, file_id: str | None) -> str:
+    id_col = (ctx or {}).get("columns", {}).get("id")
+    if id_col:
+        return str(row.get(id_col, ""))
+    if file_id:
+        return str(file_id)
+    return ""  # last resort; you could raise if you want to be strict
+
 
 
