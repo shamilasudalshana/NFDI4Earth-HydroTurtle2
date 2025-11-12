@@ -31,3 +31,6 @@ dist/
 
 #Notebooks
 .ipynb_checkpoints/
+
+# Test functions
+hydroturtle/test_fuctions.py

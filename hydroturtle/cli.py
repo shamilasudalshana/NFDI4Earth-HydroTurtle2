@@ -1,34 +1,38 @@
 import argparse
-from hydroturtle.core.engine import run_convert, run_convert_batch
+from hydroturtle.core.engine import run_convert, run_convert_batch  
 from hydroturtle.core.engine_shp import run_convert_shp
 
 def main():
     ap = argparse.ArgumentParser(description="HydroTurtle converter")
     sub = ap.add_subparsers(dest="cmd", required=True)
 
-    # CSV single
+    # CSV mode
     sp_csv = sub.add_parser("csv", help="Convert CSV → RDF/Turtle")
     sp_csv.add_argument("csv")
     sp_csv.add_argument("mapping")
     sp_csv.add_argument("out")
-    sp_csv.add_argument("--csv-encoding", default=None)
-    sp_csv.add_argument("--json-encoding", default="utf-8")
+    sp_csv.add_argument("--csv-encoding", default=None,
+                        help="e.g., utf-8, utf-8-sig, cp1252, latin-1 (auto if omitted)")
+    sp_csv.add_argument("--csv-delimiter", default=None,
+                        help="Delimiter override, e.g., ';' (auto if omitted)")
+    sp_csv.add_argument("--json-encoding", default="utf-8",
+                        help="mapping JSON encoding (default utf-8)")
 
-    # CSV batch
-    sp_csvb = sub.add_parser("csv-batch", help="Convert many CSVs → TTLs")
-    sp_csvb.add_argument("input_glob", help=r'Glob, e.g. "D:\camels\*.csv"')
+    # CSV batch mode 
+    sp_csvb = sub.add_parser("csv-batch", help="Batch-convert CSVs → RDF/Turtle (glob path)")
+    sp_csvb.add_argument("glob", help=r'Glob, e.g. "D:\camels\*.csv"')
     sp_csvb.add_argument("mapping")
     sp_csvb.add_argument("out_dir")
     sp_csvb.add_argument("--csv-encoding", default=None)
+    sp_csvb.add_argument("--csv-delimiter", default=None)
     sp_csvb.add_argument("--json-encoding", default="utf-8")
 
-    # SHP
+    # SHP mode
     sp_shp = sub.add_parser("shp", help="Convert ESRI Shapefile → RDF/Turtle")
     sp_shp.add_argument("shapefile")
     sp_shp.add_argument("mapping")
     sp_shp.add_argument("out")
-    sp_shp.add_argument("--id-field", default=None, 
-                        help="attribute name holding the unique ID (defaults to mapping.context.columns.id, else OBJECTID)")
+    sp_shp.add_argument("--id-field", default="OBJECTID")
     sp_shp.add_argument("--src-crs", default=None)
     sp_shp.add_argument("--json-encoding", default="utf-8")
 
@@ -37,12 +41,14 @@ def main():
     if args.cmd == "csv":
         run_convert(args.csv, args.mapping, args.out,
                     csv_encoding=args.csv_encoding,
+                    csv_delimiter=args.csv_delimiter,
                     json_encoding=args.json_encoding)
         return
 
     if args.cmd == "csv-batch":
-        run_convert_batch(args.input_glob, args.mapping, args.out_dir,
+        run_convert_batch(args.glob, args.mapping, args.out_dir,
                           csv_encoding=args.csv_encoding,
+                          csv_delimiter=args.csv_delimiter,
                           json_encoding=args.json_encoding)
         return
 

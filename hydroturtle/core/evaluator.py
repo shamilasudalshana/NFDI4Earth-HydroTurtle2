@@ -6,48 +6,69 @@ from pathlib import Path
 
 # --- time helpers ------------------------------------------------------------
 def _iso_datetime_from(parts, fmts):
-    s = " ".join(parts).strip()
-    # try patterns provided by mapping (can be multiple)
+    """
+    parts: list of strings (e.g., ["1981","01","01","13","45"])
+    fmts:  either ["%Y-%m-%d"] or ["%Y","%m","%d","%H","%M"] etc.
+    Returns an xsd:dateTime literal at 00:00Z if no time, else uses given time.
+    """
+    s = " ".join([str(p).strip() for p in parts if p is not None])
+    if not s:
+        raise ValueError("Empty date/time parts")
+
+    # If fmts are component-wise and match the number of parts, join with space
+    if isinstance(fmts, list) and len(fmts) > 1:
+        if len(fmts) == len(parts):
+            try:
+                fmt = " ".join(fmts)
+                dt = datetime.strptime(s, fmt)
+                # If user gave only date (no time tokens), normalize to 00:00:00Z
+                if "%H" not in fmt and "%M" not in fmt and "%S" not in fmt:
+                    dt = datetime(dt.year, dt.month, dt.day)
+                return f"\"{dt.strftime('%Y-%m-%dT%H:%M:%SZ')}\"^^xsd:dateTime"
+            except Exception:
+                pass
+        # else fall through to single-format attempt
+
+    # Try each full-format string (e.g., ["%Y-%m-%d", "%Y/%m/%d %H:%M"])
     for f in (fmts or []):
         try:
             dt = datetime.strptime(s, f)
-            return f"\"{dt.strftime('%Y-%m-%dT00:00:00Z')}\"^^xsd:dateTime"
+            # If format has no time directives, set time to 00:00:00Z
+            if all(x not in f for x in ("%H", "%M", "%S")):
+                dt = datetime(dt.year, dt.month, dt.day)
+            return f"\"{dt.strftime('%Y-%m-%dT%H:%M:%SZ')}\"^^xsd:dateTime"
         except Exception:
             pass
+
     # ISO fallback
     try:
-        dt = datetime.fromisoformat(s)
+        # Allow "YYYY-MM-DD" or "YYYY-MM-DD HH:MM[:SS]"
+        dt = datetime.fromisoformat(s.replace("Z","").replace("z",""))
         if isinstance(dt, date) and not isinstance(dt, datetime):
             dt = datetime.combine(dt, time())
-        return f"\"{dt.strftime('%Y-%m-%dT00:00:00Z')}\"^^xsd:dateTime"
+        return f"\"{dt.strftime('%Y-%m-%dT%H:%M:%SZ')}\"^^xsd:dateTime"
     except Exception:
-        raise ValueError(f"Could not parse date '{s}' with formats {fmts} or ISO YYYY-MM-DD")
+        raise ValueError(f"Could not parse date '{s}' with formats {fmts or '[]'}")
 
 def _expand_token(token, row, row_index, ctx, slug: str | None = None):
-    def _rid():
-        id_col = ctx["columns"].get("id")
-        return row.get(id_col) if id_col else row.get("__RID__", "")
-
+    rid = _row_id(row, ctx, ctx.get("_file_id"))
+    # allow slug placeholder in templates
     if token == "@catchment":
-        return ctx["uri_templates"]["catchment"].format(id=_rid(), rowIndex=row_index)
+        return ctx["uri_templates"]["catchment"].format(id=rid, rowIndex=row_index, slug=(slug or ""))
     if token == "@sensor":
-        return ctx["uri_templates"]["sensor"].format(id=_rid(), rowIndex=row_index)
+        return ctx["uri_templates"]["sensor"].format(id=rid, rowIndex=row_index, slug=(slug or ""))
     if token == "@collection":
-        return ctx["uri_templates"]["collection"].format(id=_rid(), rowIndex=row_index)
+        return ctx["uri_templates"]["collection"].format(id=rid, rowIndex=row_index, slug=(slug or ""))
     if token == "@observation":
-        # need slug to distinguish variables (precipitation, pet, …)
-        slug_val = (slug or "").lower() or "obs"
-        tpl = ctx["uri_templates"].get(
-            "observation",
-            "hyobs:observation_{id}_{rowIndex}_{slug}"
-        )
-        return tpl.format(id=_rid(), rowIndex=row_index, slug=slug_val)
+        tpl = ctx["uri_templates"].get("observation", "hyobs:observation_{id}_{rowIndex}_{slug}")
+        return tpl.format(id=rid, rowIndex=row_index, slug=(slug or ""))
     if token == "@resultTime":
         t = ctx["time_defaults"]["resultTime"]
-        cols = [row[c.lstrip("$")] for c in t["from"]]
+        cols = []
+        for c in t["from"]:
+            cols.append(row[c.lstrip("$")] if c.startswith("$") else c)
         return _iso_datetime_from(cols, t.get("format", []))
     return token
-
 
 
 # --- value evaluators --------------------------------------------------------
@@ -84,36 +105,44 @@ def _eval_object(obj, row, row_index, ctx):
 
 # --- mapping/convert orchestrator -------------------------------------------
 def load_mapping(mapping_path: str, json_encoding: str = "utf-8"):
-    import json
-    from pathlib import Path
     return json.loads(Path(mapping_path).read_text(encoding=json_encoding))
-
 
 def iter_rows(csv_path):
     with open(csv_path, newline="", encoding="utf-8") as f:
         yield from csv.DictReader(f)
 
-def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
+def convert(csv_path: str, mapping: dict,
+            csv_encoding: str | None = None,
+            csv_delimiter: str | None = None):
+
     ctx = mapping["context"]
     prefixes = mapping["prefixes"]
     rules = mapping["rules"]
-
-    # compat switch (preserve old ^^xsd:* shorthand)
     use_legacy = mapping.get("compat", {}).get("typed_literal_shorthand", True)
 
+    # delimiter hint from mapping if not given
+    if csv_delimiter is None:
+        csv_delimiter = mapping.get("context", {}).get("csv", {}).get("delimiter")
+
+    # derive file id (for batch cases like LamaH-CE)
+    ctx["_file_id"] = _derive_id_from_filename(csv_path, mapping)
+
+    # ✅ preflight: only require file id if NO id column is declared
+    id_col = (ctx.get("columns") or {}).get("id")
+    if not id_col and not ctx["_file_id"]:
+        raise ValueError(
+            f"No ID could be derived for file '{csv_path}'. "
+            f"Set mapping.context.columns.id OR mapping.derive.id_from_filename.regex."
+        )
+
     triples_by_subject = {}
+
     def add_triple(s, p, o):
         triples_by_subject.setdefault(s, []).append((p, o))
 
-    # NEW: figure out a file-scoped ID if mapping wants it
-    file_id = _derive_id_from_filename(csv_path, ctx)
-
-    for i, row in enumerate(iter_rows(csv_path, csv_encoding=csv_encoding)):
-        # compute the chosen row id (column id OR filename id)
-        rid = _row_id(row, ctx, file_id)
-        # row2 carries the resolved id for all helper expansions
-        row2 = dict(row)
-        row2["__RID__"] = rid
+    for i, row in enumerate(iter_rows(csv_path, csv_encoding=csv_encoding, csv_delimiter=csv_delimiter)):
+        # resolve the effective id for THIS row
+        rid = _row_id(row, ctx, ctx.get("_file_id"))
 
         for col, spec in rules.items():
             val = row.get(col)
@@ -126,13 +155,12 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
             slug = col.lower()
             s = subj_tpl.format(id=rid, rowIndex=i, slug=slug)
 
-            # allow first entry to override subject
             spec_iter = iter(spec)
             first = next(spec_iter)
             if isinstance(first, list) and first and first[0] == "@subject":
-                subj_token = first[1]  # "@sensor" | "@catchment" | "@collection" | template
+                subj_token = first[1]
                 if isinstance(subj_token, str) and subj_token.startswith("@"):
-                    s = _expand_token(subj_token, row2, i, ctx, slug=slug)
+                    s = _expand_token(subj_token, row, i, ctx, slug=slug)
                 else:
                     s = str(subj_token).format(id=rid, rowIndex=i, slug=slug)
             else:
@@ -140,19 +168,17 @@ def convert(csv_path: str, mapping: dict, csv_encoding: str | None = None):
 
             for entry in spec_iter:
                 p, o = entry[0], entry[1]
-
                 if use_legacy and isinstance(o, str) and o.startswith("^^"):
                     csv_val = row[col]
                     o_eval = f"\"{csv_val}\"^^{o[2:]}"
                 else:
                     o_eval = _render_obj(
-                        o, row2,
+                        o, row,
                         row_index=i,
                         ctx=ctx,
                         current_col=col,
                         use_legacy=use_legacy
                     )
-
                 add_triple(s, p, o_eval)
 
     return triples_by_subject, prefixes
@@ -166,10 +192,6 @@ def run_convert(csv_path, mapping_path, out_path):
 
 # --- Encoding detection & robust CSV reading ---------------------------------
 def detect_encoding(path: str) -> str | None:
-    """
-    Try to detect file encoding using charset-normalizer.
-    Returns an encoding name (e.g., 'cp1252', 'utf-8') or None.
-    """
     try:
         from charset_normalizer import from_path
         best = from_path(path).best()
@@ -179,54 +201,65 @@ def detect_encoding(path: str) -> str | None:
         pass
     return None
 
-def iter_rows(csv_path: str, csv_encoding: str | None = None):
-    """
-    Robust CSV reader:
-      1) uses explicit csv_encoding if provided,
-      2) else tries detect_encoding(),
-      3) else tries a fallback list: utf-8, utf-8-sig, cp1252, latin-1,
-      4) finally uses utf-8 with errors='replace' to never crash.
-    """
-    import csv
+# --- CSV reader with encoding + delimiter robustness ------------------------
+def _sniff_delimiter(sample: str) -> str:
+    # Try csv.Sniffer first
+    try:
+        dialect = csv.Sniffer().sniff(sample, delimiters=[",",";","\t","|"])
+        return dialect.delimiter
+    except Exception:
+        pass
+    # Simple heuristic: pick the delimiter with the most hits in the header
+    header = sample.splitlines()[0] if sample else ""
+    candidates = [",",";","\t","|"]
+    counts = {d: header.count(d) for d in candidates}
+    best = max(counts, key=counts.get)
+    return best if counts[best] > 0 else ","
 
-    def _yield_with(enc: str, strict: bool = True):
-        with open(csv_path, newline="", encoding=enc, errors=("strict" if strict else "replace")) as f:
-            reader = csv.DictReader(f)
-            # Touch first row to validate decoding early
-            first = next(reader)
+def iter_rows(csv_path: str,
+              csv_encoding: str | None = None,
+              csv_delimiter: str | None = None):
+    """
+    Robust CSV reader with:
+      - encoding auto/override,
+      - delimiter auto/override.
+    """
+    def _yield_with(enc: str, delim: str | None, strict: bool = True):
+        with open(csv_path, "r", newline="", encoding=enc, errors=("strict" if strict else "replace")) as f:
+            # Sniff if needed
+            if delim is None:
+                sample = f.read(65536)
+                f.seek(0)
+                d = _sniff_delimiter(sample)
+            else:
+                d = delim
+            reader = csv.DictReader(f, delimiter=d)
+            first = next(reader)  # early validate
             yield first
             for r in reader:
                 yield r
 
-    # 1) explicit
+    # Encoding selection (explicit → detected → fallbacks → replace)
     if csv_encoding:
-        yield from _yield_with(csv_encoding, strict=True)
+        yield from _yield_with(csv_encoding, csv_delimiter, strict=True)
         return
 
-    # 2) auto-detect
     enc = detect_encoding(csv_path)
     if enc:
         try:
-            # print(f"[hydroturtle] Detected CSV encoding: {enc}")
-            yield from _yield_with(enc, strict=True)
+            yield from _yield_with(enc, csv_delimiter, strict=True)
             return
         except Exception:
             pass
 
-    # 3) common fallbacks
     for enc_try in ("utf-8", "utf-8-sig", "cp1252", "latin-1"):
         try:
-            # print(f"[hydroturtle] Trying CSV encoding: {enc_try}")
-            yield from _yield_with(enc_try, strict=True)
+            yield from _yield_with(enc_try, csv_delimiter, strict=True)
             return
         except Exception:
             continue
 
-    # 4) last resort: never crash (may replace bad bytes)
-    # print("[hydroturtle] Falling back to utf-8 with replacement.")
-    yield from _yield_with("utf-8", strict=False)
-
-# hydroturtle/core/evaluator.py
+    yield from _yield_with("utf-8", csv_delimiter, strict=False)
 
 def _render_template(tpl: str, mapping: dict) -> str:
     return tpl.format(**mapping)
@@ -347,16 +380,25 @@ def _render_obj(spec, row, row_index, ctx, current_col=None, use_legacy=True):
 import re
 from pathlib import Path
 
-def _derive_id_from_filename(csv_path: str, ctx: dict) -> str | None:
-    d = (ctx or {}).get("derive", {}).get("id_from_filename")
-    if not d:
-        return None
-    pat = d.get("regex")
+def _derive_id_from_filename(csv_path: str, mapping: dict) -> str | None:
+    d = (mapping or {}).get("derive", {}).get("id_from_filename")
+    name = Path(csv_path).name
+    stem = Path(csv_path).stem
+
+    if not d or not d.get("regex"):
+        m2 = re.match(r"^ID_(\d+)", stem, flags=re.IGNORECASE)
+        return m2.group(1) if m2 else stem
+
+    pat = d["regex"]
     grp = d.get("group", 1)
-    if not pat:
-        return None
-    m = re.search(pat, Path(csv_path).name)
-    return m.group(grp) if m else None
+
+    m = re.search(pat, name, flags=re.IGNORECASE)
+    if m:
+        return m.group(grp)
+
+    m2 = re.match(r"^ID_(\d+)", stem, flags=re.IGNORECASE)
+    return m2.group(1) if m2 else stem
+
 
 def _row_id(row: dict, ctx: dict, file_id: str | None) -> str:
     id_col = (ctx or {}).get("columns", {}).get("id")

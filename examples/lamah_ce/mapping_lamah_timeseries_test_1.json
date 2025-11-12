@@ -1,0 +1,93 @@
+{
+  "compat": { "typed_literal_shorthand": true },
+
+  "derive": {
+    "id_from_filename": { "regex": "^ID_(\\d+)(?:\\.|_|$)", "group": 1  }
+  },
+
+  "prefixes": {
+    "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "unit": "http://qudt.org/vocab/unit/",
+    "xsd":  "http://www.w3.org/2001/XMLSchema#",
+    "envthes": "http://vocabs.lter-europe.net/EnvThes/",
+    "hyobs": "https://w3id.org/hmontology/"
+  },
+
+  "context": {
+	"csv": { "delimiter": ";" },
+    "columns": { "id": null, "date": null, "time": null, "YYYY": "YYYY", "MM": "MM", "DD": "DD" },
+    "uri_templates": {
+      "catchment":  "hyobs:catchment_{id}",
+      "sensor":     "hyobs:sensor_{id}",
+      "collection": "sosa:observationCollection_{id}",
+      "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+    },
+    "time_defaults": {
+      "resultTime": { "from": ["$YYYY", "$MM", "$DD"], "format": ["%Y", "%m", "%d"] }
+    }
+  },
+
+  "rules": {
+    "prec": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:30106"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM"]
+      ]]
+    ],
+
+    "total_et": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21299"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM"]
+      ]]
+    ],
+
+    "qobs": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21242"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M3-PER-SEC"]
+      ]]
+    ],
+
+    "2m_temp_mean": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:AirTemperature2mAvg"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DEG_C"]
+      ]]
+    ]
+  }
+}
