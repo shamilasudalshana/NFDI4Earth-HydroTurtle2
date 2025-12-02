@@ -3,6 +3,7 @@ import csv
 import re
 from datetime import datetime, date, time
 from pathlib import Path
+from hydroturtle.mapping.loader import load_mapping as _load_mapping
 
 # --- time helpers ------------------------------------------------------------
 def _iso_datetime_from(parts, fmts):
@@ -105,7 +106,14 @@ def _eval_object(obj, row, row_index, ctx):
 
 # --- mapping/convert orchestrator -------------------------------------------
 def load_mapping(mapping_path: str, json_encoding: str = "utf-8"):
-    return json.loads(Path(mapping_path).read_text(encoding=json_encoding))
+    """
+    Legacy wrapper around the new hydroturtle.mapping.loader.load_mapping.
+
+    New code should prefer hydroturtle.mapping.loader.load_mapping directly,
+    but existing imports from hydroturtle.core.evaluator keep working.
+    """
+    return _load_mapping(mapping_path, json_encoding=json_encoding)
+
 
 def iter_rows(csv_path):
     with open(csv_path, newline="", encoding="utf-8") as f:
@@ -403,10 +411,13 @@ def _derive_id_from_filename(csv_path: str, mapping: dict) -> str | None:
 def _row_id(row: dict, ctx: dict, file_id: str | None) -> str:
     id_col = (ctx or {}).get("columns", {}).get("id")
     if id_col:
-        return str(row.get(id_col, ""))
+        v = row.get(id_col)
+        if v not in (None, ""):
+            return str(v)
     if file_id:
         return str(file_id)
-    return ""  # last resort; you could raise if you want to be strict
+    return ""
+
 
 
 

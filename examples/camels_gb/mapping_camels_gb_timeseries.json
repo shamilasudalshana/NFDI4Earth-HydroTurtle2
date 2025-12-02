@@ -9,16 +9,18 @@
     "envthes": "http://vocabs.lter-europe.net/EnvThes/",
     "hyobs": "https://w3id.org/hmontology/"
   },
+  
+  "derive": {
+	  "id_from_filename": {
+		  "regex": "CAMELS_GB_hydromet_timeseries_(\\d{4})_",
+		  "group": 1
+		  }
+		  },
 
   "context": {
     "columns": { "id": null, "date": "date", "time": null },
 
-    "derive": {
-      "id_from_filename": {
-        "regex": "CAMELS_GB_hydromet_timeseries_(\\d{4})_",
-        "group": 1
-      }
-    },
+
 
     "uri_templates": {
       "catchment":  "hyobs:catchment_{id}",
