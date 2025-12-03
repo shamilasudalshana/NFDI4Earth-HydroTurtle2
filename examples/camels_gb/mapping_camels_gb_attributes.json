@@ -1,6 +1,4 @@
 {
-  "compat": { "typed_literal_shorthand": true },
-
   "prefixes": {
     "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "sosa": "http://www.w3.org/ns/sosa/",
@@ -16,26 +14,46 @@
     "hyobs": "https://w3id.org/hmontology/"
   },
 
-  "context": {
-    "columns": { "id": "gauge_id", "date": null, "time": null },
-    "uri_templates": {
-      "sensor":     "hyobs:sensor_{id}",
-      "catchment":  "hyobs:catchment_{id}",
-      "geom":       "hyobs:geomPoint_{id}",        
-      "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+  "configuration": {
+    "csv": {
+      "delimiter": ",",
+      "encoding": "utf-8"
     },
-    "time_defaults": {}
+    "column_types": {
+      "id": {
+        "column_name": "gauge_id",
+        "id_from_filename": null
+      },
+      "date": {
+        "column_name": null,
+        "format": null
+      },
+      "time": {
+        "column_name": null,
+        "format": null
+      },
+      "templates_for_subject_id": {
+        "sensor":     "hyobs:sensor_{id}",
+        "catchment":  "hyobs:catchment_{id}",
+        "geom":       "hyobs:geomPoint_{id}",
+        "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+      }
+    }
   },
 
   "rules": {
     "gauge_id": [
       ["@subject", "@sensor"],
       ["rdf:type", "sosa:Sensor"],
-      ["dct:identifier", "^^xsd:string"],                 
-      ["schema:name", { "@col": "gauge_name", "as": "^^xsd:string" }],
+      ["dct:identifier", "^^xsd:string"],
       ["hyobs:monitorsCatchment", "@catchment"],
       ["geo:hasGeometry", "@geom"]
     ],
+	
+	"gauge_name": [
+	   ["@subject", "@sensor"],
+	   ["schema:name", "^^xsd:string"]
+	],
 
     "gauge_lat": [
       ["@subject", "@geom"],
@@ -55,144 +73,177 @@
 
     "area": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasCatchmentAreaKm2", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],            
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:KiloM2"]
       ]]
     ],
 
     "dpsbar": [
       ["@subject", "@catchment"],
-      ["hyobs:meanSlope","^^xsd:decimal"]                
+	  ["rdf:type", "envthes:30212"],
+      ["hyobs:meanSlope","^^xsd:decimal"]
     ],
 
     "elev_mean": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:meanElevation", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],            
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "elev_min": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:minElevation", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],       
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "elev_10": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:elevation10thPercentile", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],            
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "elev_50": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:medianElevation", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],         
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "elev_90": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:elevation90thPercentile", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],           
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "elev_max": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:maxElevation", [
         ["rdf:type","qudt:QuantityValue"],
-        ["qudt:numericValue","^^xsd:decimal"],            
+        ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
 
     "p_mean": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasMeanDailyPrecip", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:MilliM-PER-DAY"]
       ]]
     ],
+
     "pet_mean": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasMeanEvapotranspiration", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:MilliM-PER-DAY"]
       ]]
     ],
+
     "aridity": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasAridityIndex","^^xsd:decimal"]
     ],
+
     "p_seasonality": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:precipitationSeasonality","^^xsd:decimal"]
     ],
+
     "frac_snow": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasSnowFraction","^^xsd:decimal"]
     ],
 
     "q_mean": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:meanDailyDischarge", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M3-PER-SEC"]
       ]]
     ],
+
     "runoff_ratio": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasRunoffRatio","^^xsd:decimal"]
     ],
+
     "stream_elas": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasStreamflowElasticity","^^xsd:decimal"]
     ],
+
     "slope_fdc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasFlowDurationCurveSlope","^^xsd:decimal"]
     ],
+
     "baseflow_index": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasBaseflowIndexLadson","^^xsd:decimal"]
     ],
+
     "baseflow_index_ceh": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasBaseflowIndexCEH","^^xsd:decimal"]
     ],
+
     "hfd_mean": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasMeanHalfFlowDate","^^xsd:decimal"]
     ],
 
     "Q5": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasLowFlowQuantile5", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M3-PER-SEC"]
       ]]
     ],
+
     "Q95": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasHighFlowQuantile95", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
@@ -202,106 +253,148 @@
 
     "high_q_freq": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasHighFlowFrequency","^^xsd:decimal"]
     ],
+
     "high_q_dur": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasHighFlowDuration","^^xsd:decimal"]
     ],
+
     "low_q_freq": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasLowFlowFrequency","^^xsd:decimal"]
     ],
+
     "low_q_dur": [
       ["@subject", "@catchment"],
       ["hyobs:hasLowFlowDuration","^^xsd:decimal"]
     ],
+
     "zero_q_freq": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasZeroFlowFraction","^^xsd:decimal"]
     ],
 
     "dwood_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasDeciduousWoodlandFraction","^^xsd:decimal"]
     ],
+
     "ewood_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasEvergreenWoodlandFraction","^^xsd:decimal"]
     ],
+
     "grass_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasGrassCoverFraction","^^xsd:decimal"]
     ],
+
     "shrub_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasShrubCoverFraction","^^xsd:decimal"]
     ],
+
     "crop_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasCropCoverFraction","^^xsd:decimal"]
     ],
+
     "urban_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasUrbanCoverFraction","^^xsd:decimal"]
     ],
+
     "inwater_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasInlandWaterCoverFraction","^^xsd:decimal"]
     ],
+
     "bares_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasBareSoilAndRockFraction","^^xsd:decimal"]
     ],
 
     "sand_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasSandFraction","^^xsd:decimal"]
     ],
+
     "silt_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasSiltFraction","^^xsd:decimal"]
     ],
+
     "clay_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasClayFraction","^^xsd:decimal"]
     ],
+
     "organic_perc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:hasOrganicFraction","^^xsd:decimal"]
     ],
+
     "bulkdens": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:bulkDensity","^^xsd:decimal"]
     ],
 
     "porosity_hypres": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:volumetricPorosityPTF_SandClay","^^xsd:decimal"]
     ],
+
     "porosity_cosby": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:totalAvailableWaterContent","^^xsd:decimal"]
     ],
+
     "ksat_hypres_sc": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:saturatedHydraulicConductivityPTF_SandClay","^^xsd:decimal"]
     ],
+
     "ksat_hypres_siltclayom": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:saturatedHydraulicConductivityPTF_SiltClayOM","^^xsd:decimal"]
     ],
 
     "root_depth": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:rootDepth", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],
         ["qudt:unit","unit:M"]
       ]]
     ],
+
     "soil_depth_pelletier": [
       ["@subject", "@catchment"],
+	  ["rdf:type", "envthes:30212"],
       ["hyobs:depthToBedrock", [
         ["rdf:type","qudt:QuantityValue"],
         ["qudt:numericValue","^^xsd:decimal"],

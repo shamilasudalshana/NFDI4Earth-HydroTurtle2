@@ -1,0 +1,591 @@
+{
+  "prefixes": {
+    "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "unit": "http://qudt.org/vocab/unit/",
+    "xsd":  "http://www.w3.org/2001/XMLSchema#",
+    "schema": "http://schema.org/",
+    "dct":    "http://purl.org/dc/terms/",
+    "envthes": "http://vocabs.lter-europe.net/EnvThes/",
+    "geo":   "http://www.opengis.net/ont/geosparql#",
+    "sf":    "http://www.opengis.net/ont/sf#",
+    "wgs84_pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
+    "dbo":  "http://dbpedia.org/ontology/",
+    "dbr":  "http://dbpedia.org/resource/",
+    "esco": "http://data.europa.eu/esco/model#",
+    "hyobs": "https://w3id.org/hmontology/"
+  },
+
+  "configuration": {
+    "csv": {
+      "delimiter": ";",
+      "encoding": "utf-8"
+    },
+    "column_types": {
+      "id": {
+        "column_name": "ID",
+        "id_from_filename": null
+      },
+      "date": {
+        "column_name": null,
+        "format": null
+      },
+      "time": {
+        "column_name": null,
+        "format": null
+      },
+      "templates_for_subject_id": {
+        "sensor":     "hyobs:sensor_{id}",
+        "catchment":  "hyobs:catchment_{id}",
+        "geom":       "hyobs:geomPoint_{id}",
+        "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+      }
+    }
+  },
+
+  "rules": {
+    "ID": [
+      ["@subject", "@sensor"],
+      ["rdf:type", "sosa:Sensor"],
+      ["dct:identifier", "^^xsd:string"],
+      ["hyobs:monitorsCatchment", "@catchment"],
+      ["geo:hasGeometry", "@geom"]
+    ],
+
+    "govnr": [
+      ["@subject", "@sensor"],
+      ["hyobs:govnrID", "^^xsd:string"]
+    ],
+
+    "name": [
+      ["@subject", "@sensor"],
+      ["schema:name", "^^xsd:string"]
+    ],
+
+    "river": [
+      ["@subject", "@sensor"],
+      ["dbo:river", "^^xsd:string"]
+    ],
+
+    "country": [
+      ["@subject", "@sensor"],
+      ["esco:isoCountryCodeA3", "^^xsd:string"]
+    ],
+
+    "region": [
+      ["@subject", "@sensor"],
+      ["hyobs:hasRiverBasedRegion", "^^xsd:string"]
+    ],
+
+    "area_gov": [
+      ["@subject", "@catchment"],
+      ["hyobs:hasCatchmentArea", "^^xsd:decimal"]
+    ],
+
+    "lat": [
+      ["@subject", "@geom"],
+      ["rdf:type", "sf:Point"],
+      ["geo:asWKT", {
+        "@template": "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT ({lon} {lat})",
+        "from": {
+          "lon": { "@col": "lon" },
+          "lat": { "@col": "lat" }
+        },
+        "as": "^^geo:wktLiteral"
+      }],
+      ["wgs84_pos:lat", "^^xsd:decimal"]
+    ],
+
+    "lon": [
+      ["@subject", "@geom"],
+      ["wgs84_pos:long", "^^xsd:decimal"]
+    ],
+
+    "elev": [
+      ["@subject", "@geom"],
+      ["wgs84_pos:alt", "^^xsd:decimal"]
+    ],
+
+    "fedstate": [
+      ["@subject", "@catchment"],
+      ["schema:addressRegion", "^^xsd:string"]
+    ],
+
+    "obsbeg_day": [
+      ["@subject", "@catchment"],
+      ["hyobs:dailyObsStartYear", "^^xsd:gYear"]
+    ],
+
+    "obsbeg_hr": [
+      ["@subject", "@catchment"],
+      ["hyobs:hourlyObsStartYear", "^^xsd:gYear"]
+    ],
+
+    "obsend": [
+      ["@subject", "@catchment"],
+      ["hyobs:obsEndYear", "^^xsd:gYear"]
+    ],
+
+    "gaps_pre": [
+      ["@subject", "@catchment"],
+      ["hyobs:gaps_pre", "^^xsd:decimal"]
+    ],
+
+    "gaps_post": [
+      ["@subject", "@catchment"],
+      ["hyobs:gaps_post", "^^xsd:decimal"]
+    ],
+
+    "area_ratio": [
+      ["@subject", "@catchment"],
+      ["hyobs:area_ratio", "^^xsd:decimal"]
+    ],
+
+    "nrs_euhyd": [
+      ["@subject", "@sensor"],
+      ["hyobs:eu_Hydro_ID", "^^xsd:string"]
+    ],
+
+    "nrs_rivat": [
+      ["@subject", "@sensor"],
+      ["hyobs:hyriv_ID", "^^xsd:string"]
+    ],
+
+    "area_calc": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:catchment_area_calculated", "^^xsd:decimal"]
+    ],
+
+    "elev_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:meanElevation", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "elev_med": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:medianElevation", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "elev_std": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:standardDeviationElevation", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "elev_ran": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:elevationRange", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "slope_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:meanSlope", "^^xsd:decimal"]
+    ],
+
+    "mvert_dist": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:has_mvert_dist", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:KiloM"]
+      ]]
+    ],
+
+    "mvert_ang": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:has_mvert_ang", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DEG"]
+      ]]
+    ],
+
+    "elon_ratio": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:elon_ratio", "^^xsd:decimal"]
+    ],
+
+    "strm_dens": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:has_Strm_density", "^^xsd:decimal"]
+    ],
+
+    "p_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMeanDailyPrecip", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
+
+    "et0_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasReferenceEvapotranspiration", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
+
+    "eta_mean": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMeanEvapotranspiration", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
+
+    "arid_1": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasAridityIndex", "^^xsd:decimal"]
+    ],
+
+    "arid_2": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasReciprocalAridityIndex", "^^xsd:decimal"]
+    ],
+
+    "p_season": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:precipitationSeasonality", "^^xsd:decimal"]
+    ],
+
+    "frac_snow": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSnowFraction", "^^xsd:decimal"]
+    ],
+
+    "hi_prec_fr": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasHighPrecFrequency", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","hyobs:DAY-PER-YR"]
+      ]]
+    ],
+
+    "hi_prec_du": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasHighPrecipitationDuration", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DAY"]
+      ]]
+    ],
+
+    "hi_prec_ti": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasHighPrecipitationSeason", "^^xsd:string"]
+    ],
+
+    "lo_prec_fr": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasLowPrecFrequency", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","hyobs:DAY-PER-YR"]
+      ]]
+    ],
+
+    "lo_prec_du": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasLowPrecipitationDuration", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DAY"]
+      ]]
+    ],
+
+    "lo_prec_ti": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasLowPrecipitationSeason", "^^xsd:string"]
+    ],
+
+    "lc_dom": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasDominantLandUse", "^^xsd:decimal"]
+    ],
+
+    "agr_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasAgriculturalAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "bare_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasBareAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "forest_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasForestAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "glac_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasGlacierAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "lake_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasLakeAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "urban_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasUrbanAreaFraction", "^^xsd:decimal"]
+    ],
+
+    "lai_max": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMaxLeafAreaIndex", "^^xsd:decimal"]
+    ],
+
+    "lai_diff": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasRangeLeafAreaIndex", "^^xsd:decimal"]
+    ],
+
+    "ndvi_max": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMaxNDVI", "^^xsd:decimal"]
+    ],
+
+    "ndvi_min": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMinNDVI", "^^xsd:decimal"]
+    ],
+
+    "gvf_max": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMaxGreenVegetationFraction", "^^xsd:decimal"]
+    ],
+
+    "gvf_diff": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasRangeGreenVegetationFraction", "^^xsd:decimal"]
+    ],
+
+    "bedrk_dep": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasDepthtoBedrock", "^^xsd:decimal"]
+    ],
+
+    "root_dep": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasRootdepth", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "soil_poros": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSoilPorosity", "^^xsd:decimal"]
+    ],
+
+    "soil_condu": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSaturatedHydraulicConductivity", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:CentiM-PER-HR"]
+      ]]
+    ],
+
+    "soil_tawc": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasTotalAvailableWaterContent", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M"]
+      ]]
+    ],
+
+    "sand_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSandFraction", "^^xsd:decimal"]
+    ],
+
+    "silt_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSiltFraction", "^^xsd:decimal"]
+    ],
+
+    "clay_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasClayFraction", "^^xsd:decimal"]
+    ],
+
+    "grav_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSandFraction", "^^xsd:decimal"]
+    ],
+
+    "oc_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasOrganicFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_dom": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasDominantGeologicalClass", "^^xsd:string"]
+    ],
+
+    "gc_ig_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasIceAndGlacierFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_mt_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMetamorphitesFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_pa_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasAcidPlutonicRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_pb_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasBasicPlutonicRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_pi_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasIntermediatePlutonicRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_py_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasPyroclasticsFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_sc_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasCarbonateSedimentaryRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_sm_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasMixedSedimentaryRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_ss_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSiliciclasticSedimentaryRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_su_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasUnconsolidatedSedimentsFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_va_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasAcidVolcanicRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_vb_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasBasicVolcanicRocksFraction", "^^xsd:decimal"]
+    ],
+
+    "gc_wb_fra": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasWaterBodiesFraction", "^^xsd:decimal"]
+    ],
+
+    "geol_perme": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSubsurfacePermeabilityFraction", "^^xsd:decimal"]
+    ],
+
+    "geol_poros": [
+      ["@subject", "@catchment"],
+      ["rdf:type", "envthes:30212"],
+      ["hyobs:hasSubsurfacePorosityFraction", "^^xsd:decimal"]
+    ]
+  }
+}

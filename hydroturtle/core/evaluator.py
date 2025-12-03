@@ -63,6 +63,9 @@ def _expand_token(token, row, row_index, ctx, slug: str | None = None):
     if token == "@observation":
         tpl = ctx["uri_templates"].get("observation", "hyobs:observation_{id}_{rowIndex}_{slug}")
         return tpl.format(id=rid, rowIndex=row_index, slug=(slug or ""))
+    if token == "@geom":
+        tpl = ctx["uri_templates"].get("geom", "hyobs:geomPoint_{id}")
+        return tpl.format(id=rid, rowIndex=row_index, slug=(slug or ""))
     if token == "@resultTime":
         t = ctx["time_defaults"]["resultTime"]
         cols = []
@@ -188,6 +191,18 @@ def convert(csv_path: str, mapping: dict,
                         use_legacy=use_legacy
                     )
                 add_triple(s, p, o_eval)
+    
+    # remove deduplicate triples per subject
+    for s, po_list in triples_by_subject.items():
+        seen = set()
+        deduped = []
+        for p, o in po_list:
+            key = (p, o)
+            if key in seen:
+                continue
+            seen.add(key)
+            deduped.append((p, o))
+        triples_by_subject[s] = deduped
 
     return triples_by_subject, prefixes
 
