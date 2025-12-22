@@ -7,33 +7,44 @@
     "dct":  "http://purl.org/dc/terms/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#",
     "envthes": "http://vocabs.lter-europe.net/EnvThes/",
-    "hyobs": "https://w3id.org/hmontology/"
+	"dbo": "http://dbpedia.org/ontology/",
+	"qudt": "http://qudt.org/schema/qudt/",
+	"unit": "http://qudt.org/vocab/unit/",
+    "hyobs":"https://w3id.org/hmontology/"
   },
 
-  "context": {
-    "columns": { "id": "OBJECTID" },
-    "uri_templates": {
-      "sensor":    "hyobs:sensor_{id}",
-      "catchment": "hyobs:catchment_{id}",
-      "geom":      "hyobs:geomPolygon_{id}"
+  "configuration": {
+    "column_types": {
+      "id": { "column_name": "OBJECTID", "id_from_filename": null },
+      "date": { "column_name": null, "format": null },
+      "time": { "column_name": null, "format": null },
+
+      "templates_for_subject_id": {
+        "sensor":    "hyobs:sensor_{id}",
+        "catchment": "hyobs:catchment_{id}",
+        "geom":      "hyobs:geomPolygon_{id}"
+      }
     }
   },
 
   "rules": {
     "@subject": { "@template": "@catchment" },
-
     "rdf:type": "envthes:30212",
-
     "geo:hasGeometry": "@geom",
-
     "@geom": [
       ["rdf:type", "sf:Polygon"],
-      ["geo:asWKT", {"@wkt": "geometry"}]
+      ["geo:asWKT", { "@wkt": "geometry" }]
     ],
-
     "@sensor": [
       ["hyobs:monitorsCatchment", "@catchment"]
-    ]
+    ],
+	"Area_km2": [
+	  ["@subject", "@catchment"],
+	  ["hyobs:hasCatchmentAreaKm2", [
+		["rdf:type", "qudt:QuantityValue"],
+		["qudt:numericValue", "^^xsd:decimal"],
+		["qudt:unit", "unit:KiloM2"]
+	  ]]
+	]
   }
 }
-

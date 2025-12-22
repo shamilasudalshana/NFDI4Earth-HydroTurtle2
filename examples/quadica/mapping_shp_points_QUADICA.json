@@ -7,27 +7,40 @@
     "dct":  "http://purl.org/dc/terms/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#",
     "envthes": "http://vocabs.lter-europe.net/EnvThes/",
+	"schema": "http://schema.org/",
     "hyobs":"https://w3id.org/hmontology/"
   },
-  "context": {
-    "columns": { "id": "OBJECTID" },
-    "uri_templates": {
-      "sensor": "hyobs:sensor_{id}",
-      "geom":   "hyobs:geomPoint_{id}"
+
+  "configuration": {
+    "column_types": {
+      "id": { "column_name": "OBJECTID", "id_from_filename": null },
+      "date": { "column_name": null, "format": null },
+      "time": { "column_name": null, "format": null },
+
+      "templates_for_subject_id": {
+        "sensor": "hyobs:sensor_{id}",
+        "geom":   "hyobs:geomPoint_{id}"
+      }
     }
   },
+
   "rules": {
     "@subject": { "@template": "@sensor" },
-
     "rdf:type": "sosa:Sensor",
     "dct:identifier": "^^xsd:string",
-
     "geo:hasGeometry": "@geom",
-
     "@geom": [
       ["rdf:type", "sf:Point"],
-      ["geo:asWKT", {"@wkt": "geometry"}]
-    ]
+      ["geo:asWKT", { "@wkt": "geometry" }]
+    ], 
+	"Station": [
+	  ["@subject", "@sensor"],
+	  ["schema:name", "^^xsd:string"]
+	],
+
+	"River": [
+	  ["@subject", "@sensor"],
+	  ["hyobs:riverName", "^^xsd:string"]
+	]
   }
 }
-

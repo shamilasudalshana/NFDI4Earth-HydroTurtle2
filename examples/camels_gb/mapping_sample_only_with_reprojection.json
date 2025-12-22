@@ -6,44 +6,34 @@
     "sf":   "http://www.opengis.net/ont/sf#",
     "dct":  "http://purl.org/dc/terms/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#",
-    "wgs84_pos": "http://www.w3.org/2003/01/geo/wgs84_pos#",
-    "hyobs": "https://w3id.org/hmontology/"
+    "envthes": "http://vocabs.lter-europe.net/EnvThes/",
+    "hyobs":"https://w3id.org/hmontology/"
   },
 
-  "context": {
-    "columns": { "id": "gauge_id", "date": null, "time": null },
-    "uri_templates": {
-      "sensor": "hyobs:sensor_{id}",
-      "geom":   "hyobs:geomPoint_{id}"
-    },
-    "time_defaults": {}
+  "configuration": {
+    "column_types": {
+      "id": { "column_name": "OBJECTID", "id_from_filename": null },
+      "date": { "column_name": null, "format": null },
+      "time": { "column_name": null, "format": null },
+
+      "templates_for_subject_id": {
+        "sensor":    "hyobs:sensor_{id}",
+        "catchment": "hyobs:catchment_{id}",
+        "geom":      "hyobs:geomPolygon_{id}"
+      }
+    }
   },
 
   "rules": {
-    "gauge_id": [
-      ["@subject", "@sensor"],
-      ["rdf:type", "sosa:Sensor"],
-      ["dct:identifier", "^^xsd:string"],
-      ["geo:hasGeometry", "@geom"]
+    "@subject": { "@template": "@catchment" },
+    "rdf:type": "envthes:30212",
+    "geo:hasGeometry": "@geom",
+    "@geom": [
+      ["rdf:type", "sf:Polygon"],
+      ["geo:asWKT", { "@wkt": "geometry" }]
     ],
-
-    "easting": [
-      ["@subject", "@geom"],
-      ["rdf:type", "sf:Point"],
-
-      // Reproject (E,N in EPSG:27700) -> (lon,lat) in WGS84, then make WKT
-      ["geo:asWKT", {
-        "@point": {
-          "easting": { "@col": "easting" },  //need to mention the easting column name 
-          "northing": { "@col": "northing" }, //need to mention the northing column name 
-          "src_crs": "EPSG:27700",
-          "dst_crs": "EPSG:4326"
-        },
-        "@template": "<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT ({lon} {lat})",
-        "as": "^^geo:wktLiteral"
-      }],
-
-      ["wgs84_pos:alt", { "@col": "elev_m", "as": "^^xsd:decimal" }]
+    "@sensor": [
+      ["hyobs:monitorsCatchment", "@catchment"]
     ]
   }
 }
