@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from typing import Dict, Any, List, Tuple, Optional
+
 from hydroturtle.geo.shp_reader import iter_features
 from hydroturtle.geo.wkt import wkt_literal_crs84
 from hydroturtle.io.ttl_writer import write_turtle
@@ -9,7 +10,7 @@ from hydroturtle.mapping.loader import load_mapping
 
 # SHP engine supports TWO rule styles:
 #
-# (A) Legacy SHP-style dict rules (already used for QUADICA geometry):
+# (A) Legacy SHP-style dict rules:
 #     "rules": {
 #        "@subject": {"@template":"@catchment"},
 #        "rdf:type": "envthes:30212",
@@ -20,7 +21,7 @@ from hydroturtle.mapping.loader import load_mapping
 #        ]
 #     }
 #
-# (B) CSV-style "column rules" for SHP attributes:
+# (B) CSV-style "column rules" for SHP attribute fields:
 #     "rules": {
 #        "Area_km2": [
 #            ["@subject","@catchment"],
@@ -36,14 +37,13 @@ from hydroturtle.mapping.loader import load_mapping
 
 
 def _build_uri(name: str, ctx: Dict[str, Any], id_value: Any) -> str:
-    tpl = ctx.get("uri_templates", {}).get(name)
+    tpl = (ctx.get("uri_templates") or {}).get(name)
     if not tpl:
         raise KeyError(f"uri_templates missing key '{name}'")
     return tpl.format(id=id_value)
 
 
 def _resolve_ref(token: Any, ctx: Dict[str, Any], id_value: Any) -> Any:
-    # Only strings can be template tokens like "@sensor"
     if isinstance(token, str) and token.startswith("@"):
         key = token[1:]
         if key in ("sensor", "catchment", "geom", "collection", "observation"):
@@ -57,7 +57,6 @@ def _emit(triples_by_subject: Dict[str, List[Tuple[str, str]]], s: str, p: str, 
 
 def _as_typed_literal(value: Any, datatype: str) -> str:
     # datatype like "^^xsd:decimal"
-    # keep exact suffix the user provided (^^xsd:decimal)
     return f"\"{value}\"{datatype}"
 
 
@@ -76,7 +75,6 @@ def _render_obj_shp(
       - string object to emit
       - "" to mean: skip this triple
     """
-
     # 1) WKT literal
     if isinstance(spec, dict) and "@wkt" in spec:
         return wkt_literal_crs84(geom)
@@ -90,18 +88,15 @@ def _render_obj_shp(
         dt = spec.get("as")
         if isinstance(dt, str) and dt.startswith("^^"):
             return _as_typed_literal(val, dt)
-        # default: plain literal string
         return f"\"{val}\""
 
     # 3) template token "@catchment", "@geom", ...
     if isinstance(spec, str) and spec.startswith("@"):
         return str(_resolve_ref(spec, ctx, fid))
 
-    # 4) typed literal shorthand "^^xsd:decimal"
-    # inject current field value
+    # 4) typed literal shorthand "^^xsd:decimal" inject current field value
     if isinstance(spec, str) and spec.startswith("^^"):
         if current_col is None:
-            # no current column context -> cannot inject, skip
             return ""
         val = props.get(current_col)
         if val is None:
@@ -112,7 +107,6 @@ def _render_obj_shp(
     if isinstance(spec, str):
         return spec
 
-    # fallback
     return str(spec)
 
 
@@ -130,8 +124,8 @@ def _emit_blank_node_block(
 ):
     """
     Emit:
-        subject predicate _:bN .
-        _:bN p o .
+        subject predicate _:bX .
+        _:bX p o .
         ...
     """
     bnode_counter[0] += 1
@@ -148,6 +142,64 @@ def _emit_blank_node_block(
         _emit(triples_by_subject, bnode_id, p3, str(_resolve_ref(obj3, ctx, fid)))
 
 
+def _build_ctx_from_mapping(mapping: Dict[str, Any]) -> Dict[str, Any]:
+    """
+    Normalize mapping context for SHP, supporting BOTH:
+      - old style: mapping["context"]["uri_templates"] (+ maybe context.columns.id)
+      - new style: mapping["configuration"]["column_types"]["templates_for_subject_id"]
+                   + mapping["configuration"]["column_types"]["id"]["column_name"]
+
+    IMPORTANT: Sometimes loader converts new->legacy and creates context,
+    but (in some user-edited cases) context.columns.id may be missing/empty.
+    We fill it from configuration if available.
+    """
+    ctx = mapping.get("context")
+    if isinstance(ctx, dict) and isinstance(ctx.get("uri_templates"), dict):
+        ctx.setdefault("columns", {})
+
+        # if id is missing, try to backfill from configuration
+        id_in_ctx = (ctx.get("columns") or {}).get("id")
+        if not id_in_ctx:
+            cfg = mapping.get("configuration", {})
+            if isinstance(cfg, dict):
+                col_types = cfg.get("column_types", {})
+                if isinstance(col_types, dict):
+                    id_cfg = col_types.get("id", {})
+                    if isinstance(id_cfg, dict):
+                        maybe = id_cfg.get("column_name")
+                        if maybe:
+                            ctx["columns"]["id"] = maybe
+
+        return ctx
+
+    # otherwise build from new configuration directly
+    cfg = mapping.get("configuration", {})
+    cfg = cfg if isinstance(cfg, dict) else {}
+    col_types = cfg.get("column_types", {})
+    col_types = col_types if isinstance(col_types, dict) else {}
+
+    id_cfg = col_types.get("id", {})
+    id_cfg = id_cfg if isinstance(id_cfg, dict) else {}
+
+    templates = col_types.get("templates_for_subject_id", {})
+    templates = templates if isinstance(templates, dict) else {}
+
+    return {
+        "columns": {"id": id_cfg.get("column_name")},
+        "uri_templates": templates
+    }
+
+
+def _get_src_crs_from_mapping(mapping: Dict[str, Any]) -> Optional[str]:
+    cfg = mapping.get("configuration", {})
+    if not isinstance(cfg, dict):
+        return None
+    shp_cfg = cfg.get("shapefile", {})
+    if not isinstance(shp_cfg, dict):
+        return None
+    return shp_cfg.get("src_crs")
+
+
 def run_convert_shp(
     shp_path: str,
     mapping_path: str,
@@ -157,17 +209,25 @@ def run_convert_shp(
     json_encoding: str = "utf-8"
 ):
     mapping = load_mapping(mapping_path, json_encoding=json_encoding)
+
     prefixes = mapping["prefixes"]
-    ctx = mapping["context"]
     rules = mapping.get("rules", {})
 
-    # Resolve ID field: CLI > mapping.context.columns.id > fallback
-    mapping_id = ctx.get("columns", {}).get("id")
+    # Build ctx regardless of mapping style (old/new)
+    ctx = _build_ctx_from_mapping(mapping)
+
+    # CRS: CLI overrides mapping config; if None -> assume WGS84 input
+    src_crs_final = src_crs_override or _get_src_crs_from_mapping(mapping)
+
+    # Resolve ID field: CLI > mapping > fallback
+    mapping_id = None
+    if isinstance(ctx.get("columns"), dict):
+        mapping_id = ctx["columns"].get("id")
     id_field_final = id_field or mapping_id or "OBJECTID"
 
     triples_by_subject: Dict[str, List[Tuple[str, str]]] = {}
 
-    for feat in iter_features(shp_path, id_field=id_field_final, src_crs_override=src_crs_override):
+    for feat in iter_features(shp_path, id_field=id_field_final, src_crs_override=src_crs_final):
         fid = feat["id"]
         props = feat["props"]
         geom = feat["geom"]
@@ -183,7 +243,7 @@ def run_convert_shp(
 
         if not subject:
             # Default: prefer sensor if defined, else catchment
-            if "sensor" in ctx.get("uri_templates", {}):
+            if "sensor" in (ctx.get("uri_templates") or {}):
                 subject = str(_resolve_ref("@sensor", ctx, fid))
             else:
                 subject = str(_resolve_ref("@catchment", ctx, fid))
@@ -196,7 +256,6 @@ def run_convert_shp(
                 continue
 
             # If this rule key is a real SHP attribute column name, it will be handled in PASS B.
-            # Skipping it here prevents duplicate blank nodes like _:b1002_1 and _:b1002_2.
             if isinstance(pred, str) and (not pred.startswith("@")) and (pred in props):
                 continue
 
@@ -208,7 +267,6 @@ def run_convert_shp(
                         continue
                     p2, o2 = part
 
-                    # blank-node blocks inside a node-builder block
                     if isinstance(o2, list):
                         _emit_blank_node_block(
                             triples_by_subject, node_uri, p2, o2,
@@ -225,8 +283,6 @@ def run_convert_shp(
 
             # Simple predicate -> object
             if isinstance(obj, str):
-                # Special-case: identifier shorthand on SHP
-                # If mapping says dct:identifier: "^^xsd:string", inject the feature id
                 if obj == "^^xsd:string" and isinstance(pred, str) and pred.endswith("identifier"):
                     val = props.get(id_field_final, fid)
                     o = f"\"{val}\"^^xsd:string"
@@ -246,7 +302,6 @@ def run_convert_shp(
                     if isinstance(p2, str) and p2.startswith("@"):
                         continue
 
-                    # blank node block
                     if isinstance(o2, list):
                         _emit_blank_node_block(
                             triples_by_subject, subject, p2, o2,
@@ -282,12 +337,10 @@ def run_convert_shp(
                     continue
                 p, o = part
 
-                # subject switch
                 if p == "@subject":
                     local_subject = str(_resolve_ref(o, ctx, fid))
                     continue
 
-                # blank node block
                 if isinstance(o, list):
                     _emit_blank_node_block(
                         triples_by_subject, local_subject, p, o,
@@ -296,10 +349,10 @@ def run_convert_shp(
                     )
                     continue
 
-                obj = _render_obj_shp(o, props, current_col=current_col, ctx=ctx, fid=fid, geom=geom)
-                if obj == "":
+                objv = _render_obj_shp(o, props, current_col=current_col, ctx=ctx, fid=fid, geom=geom)
+                if objv == "":
                     continue
-                _emit(triples_by_subject, local_subject, p, str(_resolve_ref(obj, ctx, fid)))
+                _emit(triples_by_subject, local_subject, p, str(_resolve_ref(objv, ctx, fid)))
 
     write_turtle(triples_by_subject, prefixes, out_path)
     return out_path

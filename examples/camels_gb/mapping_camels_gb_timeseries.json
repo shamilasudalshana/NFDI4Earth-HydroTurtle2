@@ -1,4 +1,5 @@
 {
+  "compat": { "typed_literal_shorthand": true },
   "prefixes": {
     "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "sosa": "http://www.w3.org/ns/sosa/",
@@ -9,191 +10,183 @@
     "hyobs": "https://w3id.org/hmontology/"
   },
 
-  "configuration": {
-    "csv": {
-      "delimiter": ",",
-      "encoding": "utf-8"
-    },
 
+  "configuration": {
     "column_types": {
       "id": {
-        "column_name": null,
+        "column_name": "gauge_id",
         "id_from_filename": {
           "regex": "CAMELS_GB_hydromet_timeseries_(\\d{4})_",
           "regex-split": 1
         }
       },
-
       "date": {
         "column_name": "date",
         "format": "%Y-%m-%d"
       },
-
       "time": {
         "column_name": null,
         "format": null
       },
-
       "templates_for_subject_id": {
         "sensor": "hyobs:sensor_{id}",
         "catchment": "hyobs:catchment_{id}",
         "geom": "hyobs:geomPoint_{id}",
-		"collection": "sosa:observationCollection_{id}",
         "observation": "hyobs:observation_{id}_{rowIndex}_{slug}"
       }
     }
   },
-  
+
+
   "rules": {
-	  "precipitation": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "envthes:30106"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:MilliM"]
-		]]
-	  ],
+    "precipitation": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:30106"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM"]
+      ]]
+    ],
 
-	  "pet": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "envthes:21210"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:MilliM-PER-DAY"]
-		]]
-	  ],
+    "pet": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21210"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
 
-	  "temperature": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "envthes:21524"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:DEG_C"]
-		]]
-	  ],
+    "temperature": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21524"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DEG_C"]
+      ]]
+    ],
 
-	  "discharge_spec": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "hyobs:SpecificDischarge"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:MilliM-PER-DAY"]
-		]]
-	  ],
+    "discharge_vol": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21242"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M3-PER-SEC"]
+      ]]
+    ],
 
-	  "discharge_vol": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "hyobs:DischargeVolume"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:M3-PER-SEC"]
-		]]
-	  ],
+    "discharge_spec": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SpecificDischarge"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
 
-	  "peti": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "hyobs:DischargeVolume"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:MilliM-PER-DAY"]
-		]]
-	  ],
+    "peti": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:EvapotranspirationPenmanMonteith"],   
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
 
-	  "humidity": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "envthes:21578"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:GM-PER-KiloGM"]
-		]]
-	  ],
+    "humidity": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:RelativeHumidity"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:GM-PER-KiloGM"]
+      ]]
+    ],
 
-	  "shortwave_rad": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "hyobs:DownwardShortwaveRadiation"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:W-PER-M2"]
-		]]
-	  ],
+    "shortwave_rad": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:ShortwaveRadiationFlux"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:W-PER-M2"]
+      ]]
+    ],
 
-	  "longwave_rad": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "hyobs:LongwaveRadiation"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:W-PER-M2"]
-		]]
-	  ],
+    "longwave_rad": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:LongwaveRadiationFlux"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:W-PER-M2"]
+      ]]
+    ],
 
-	  "windspeed": [
-		["@subject", "@observation"],
-		["rdf:type", "sosa:Observation"],
-		["sosa:observedProperty", "envthes:30342"],
-		["sosa:hasFeatureOfInterest", "@catchment"],
-		["sosa:madeBySensor", "@sensor"],
-		["sosa:memberOf", "@collection"],
-		["sosa:resultTime", "@resultTime"],
-		["sosa:hasResult", [
-		  ["rdf:type","qudt:QuantityValue"],
-		  ["qudt:numericValue","^^xsd:decimal"],
-		  ["qudt:unit","unit:M-PER-SEC"]
-		]]
-	  ]
-	}
-
+    "windspeed": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:30342"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:M-PER-SEC"]
+      ]]
+    ]
+  }
 }

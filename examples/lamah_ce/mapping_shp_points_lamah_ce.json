@@ -6,39 +6,35 @@
     "sf":   "http://www.opengis.net/ont/sf#",
     "dct":  "http://purl.org/dc/terms/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#",
-    "envthes": "http://vocabs.lter-europe.net/EnvThes/",
-    "hyobs": "https://w3id.org/hmontology/"
+    "hyobs":"https://w3id.org/hmontology/"
   },
 
   "configuration": {
-	"shapefile": {
-	   "src_crs": "EPSG:27700"
-     },
+    "shapefile": {
+      "src_crs": "EPSG:3035"
+    },
     "column_types": {
-      "id": { "column_name": "ID_STRING", "id_from_filename": null },
+      "id":   { "column_name": "ID", "id_from_filename": null },
       "date": { "column_name": null, "format": null },
       "time": { "column_name": null, "format": null },
 
       "templates_for_subject_id": {
-        "sensor":    "hyobs:sensor_{id}",
-        "catchment": "hyobs:catchment_{id}",
-        "geom":      "hyobs:geomPolygon_{id}"
+        "sensor": "hyobs:sensor_{id}",
+        "geom":   "hyobs:geomPoint_{id}"
       }
     }
   },
 
   "rules": {
-    "@subject": { "@template": "@catchment" },
-    "rdf:type": "envthes:30212",
+    "@subject": { "@template": "@sensor" },
+
+    "rdf:type": "sosa:Sensor",
+    "dct:identifier": "^^xsd:string",
     "geo:hasGeometry": "@geom",
 
     "@geom": [
-      ["rdf:type", "sf:Polygon"],
+      ["rdf:type", "sf:Point"],
       ["geo:asWKT", { "@wkt": "geometry" }]
-    ],
-
-    "@sensor": [
-      ["hyobs:monitorsCatchment", "@catchment"]
     ]
   }
 }
