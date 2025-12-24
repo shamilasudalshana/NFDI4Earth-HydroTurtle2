@@ -37,7 +37,7 @@ conda create -n ht python=3.12 shapely fiona pyproj pip → conda activate ht �
 ```
 ## Command-line usage
 
-HydroTurtle exposes two subcommands: `csv` and `shp`.
+HydroTurtle exposes two subcommands: `csv`, `csv-batch` and `shp`.
 
 ### CSV → RDF
 ```bash
@@ -54,6 +54,48 @@ hydroturtle csv data.csv mapping.json out.ttl --csv-encoding cp1252
 
 **Notes** 
 - Empty-like values (`""`, `NA`, `NaN`, case-insensitive) are skipped.
+- CSV delimiter is auto-sniffed; override if needed:
+```bash
+hydroturtle csv data.csv mapping.json out.ttl --csv-delimiter ";"
+```
+### CSV (batch) → RDF (many files in a directory)
+Process many per-gauge/per-catchment files in one go. IDs can be derived from filenames if needed.
+
+```bash
+hydroturtle csv-batch "<file_name_with_patten>" <mapping.json> <out_dir>
+```
+Example (CAMELS-GB time series):
+```bash
+hydroturtle csv-batch "C:\camels\TS\CAMELS_GB_hydromet_timeseries_*.csv" ^
+  "examples\camels_gb\mapping_camels_gb_timeseries.json" ^
+  "C:\out\camels_gb_ts"
+```
+
+### SHP → RDF (points/polygons)
+
+```bash
+hydroturtle shp <input.shp> <mapping_shp.json> <out.ttl>
+# module form:
+python -m hydroturtle.cli shp <input.shp> <mapping_shp.json> <out.ttl>
+```
+**Options**
+- ID field can be provided via CLI (overrides mapping):
+```bash
+hydroturtle shp catchments.shp mapping_polygons.json out.ttl --id-field ID_STRING
+```
+- CRS can be provided via CLI (overrides mapping / .prj):
+```bash
+hydroturtle shp stations.shp mapping_points.json out.ttl --src-crs EPSG:3035
+```
+
+## Mapping files(JSON)
+Each mapping provides:
+- `prefixes` — CURIE prefixes for vocabularies
+- `configuration.column_types` — declares ID/date/time columns and URI templates
+- `configuration.shapefile.src_crs` — optional CRS override for shapefiles
+- `rules` — what triples to emit (observations, attributes, geometries)   
+
+
 - The mapping’s `context.columns` controls ID/Date recognition:
 ```json
 "columns": { "id": "OBJECTID", "date": "Date", "time": null }
@@ -154,7 +196,7 @@ Each mapping provides:
 - `context.uri_templates` — patterns for node IRIs (e.g., hyobs:sensor_{id})
 - `rules` — what to emit (observations, attributes, geometries)
 
-### CSV example (Meteological Time series)
+### CSV example - Meteological Time series (From LamaH-CE)
 ```json
 {
   "prefixes": {
@@ -166,20 +208,22 @@ Each mapping provides:
     "envthes":"http://vocabs.lter-europe.net/EnvThes/",
     "hyobs":"https://w3id.org/hmontology/"
   },
-  "context": {
-    "columns": { "id": "OBJECTID", "date": "Date", "time": null },
-    "uri_templates": {
-      "catchment":  "hyobs:catchment_{id}",
-      "sensor":     "hyobs:sensor_{id}",
-      "collection": "sosa:observationCollection_{id}",
-      "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
-    },
-    "time_defaults": {
-      "resultTime": { "from": ["$Date"], "format": ["%Y-%m-%d"] }
+  "configuration": {
+    "column_types": {
+      "id": { "column_name": null, "id_from_filename": { "regex": "ID_(\\d+)", "regex-split": 1 } },
+      "date": { "column_name": "date", "format": "%Y-%m-%d" },
+      "time": { "column_name": null, "format": null },
+      "templates_for_subject_id": {
+        "catchment":  "hyobs:catchment_{id}",
+        "sensor":     "hyobs:sensor_{id}",
+        "collection": "sosa:observationCollection_{id}",
+        "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+      }
     }
   },
   "rules": {
-    "pre": [
+    "precipitation": [
+      ["@subject", "@observation"],
       ["rdf:type", "sosa:Observation"],
       ["sosa:observedProperty", "envthes:30106"],
       ["sosa:hasFeatureOfInterest", "@catchment"],
@@ -194,11 +238,13 @@ Each mapping provides:
     ]
   }
 }
+
 ```
-### SHP example (points) - guaging stations
+### SHP example (points) - guaging stations (From Lamah-CE)
 ```json
 {
   "prefixes": {
+    "rdf":"http://www.w3.org/1999/02/22-rdf-syntax-ns#",
     "sosa":"http://www.w3.org/ns/sosa/",
     "geo":"http://www.opengis.net/ont/geosparql#",
     "sf":"http://www.opengis.net/ont/sf#",
@@ -206,11 +252,16 @@ Each mapping provides:
     "xsd":"http://www.w3.org/2001/XMLSchema#",
     "hyobs":"https://w3id.org/hmontology/"
   },
-  "context": {
-    "columns": { "id": "OBJECTID" },
-    "uri_templates": {
-      "sensor":"hyobs:sensor_{id}",
-      "geom":"hyobs:geomPoint_{id}"
+  "configuration": {
+    "shapefile": { "src_crs": "EPSG:3035" },
+    "column_types": {
+      "id": { "column_name": "ID", "id_from_filename": null },
+      "date": { "column_name": null, "format": null },
+      "time": { "column_name": null, "format": null },
+      "templates_for_subject_id": {
+        "sensor":"hyobs:sensor_{id}",
+        "geom":"hyobs:geomPoint_{id}"
+      }
     }
   },
   "rules": {
@@ -232,25 +283,24 @@ Each mapping provides:
 ```perl
 hydroturtle/
   hydroturtle/
-    cli.py                # `csv` and `shp` subscommands
+    cli.py                # `csv`, `csv-batch`, `shp`
     core/                 # engines
     io/                   # turtle writer
     time/                 # date/time parsing
-    mapping/              # schema/loader (pydantic)
-    geo/                  # shapefile reader + WKT literal serializer
-    compat/               # legacy adapters (optional)
-  legacy/                 # old scripts preserved
+    mapping/              # loader + schema
+    geo/                  # shapefile reader + WKT serializer
 examples/                 # mapping file examples
+docs/                     # mapping documentation
 ```
 #### Shapefiles & CRS
-- CRS auto-detected via Fiona; geometries reprojected to CRS84 (lon,lat).
-- WKT literals include the CRS IRI per GeoSPARQL 1.1:
-`"<http://www.opengis.net/def/crs/OGC/1.3/CRS84> POINT (...)"^^geo:wktLiteral`
-- Override CRS with --src-crs EPSG:xxxx if .prj is missing/wrong.
+- CRS is read from `.prj` where available.
+- If missing/incorrect, set `configuration.shapefile.src_crs` in the mapping, or override with `--src-crs EPSG:xxxx`.
+- Output WKT is CRS84 (lon,lat) as GeoSPARQL 1.1 WKT literal: 
+`"<http://www.opengis.net/def/crs/OGC/1.3/CRS84> ..."^^geo:wktLiteral`
 
 #### Encoding
-- CSV encoding auto-detected; override with --csv-encoding.
-- Mapping JSON defaults to UTF-8; override with --json-encoding.
+- CSV encoding auto-detected; override with `--csv-encoding`.
+- Mapping JSON defaults to UTF-8; override with `--json-encoding`.
 
 #### Important 
-- Mapping directives starting with @ (e.g., @subject, @geom) are not emitted as predicates.
+- Mapping directives starting with `@` (e.g., `@subject`, `@geom`) are control directives and are not emitted as predicates.
