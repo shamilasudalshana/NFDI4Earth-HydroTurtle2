@@ -1,26 +1,23 @@
 {
   "prefixes": {
     "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
-    "sosa": "http://www.w3.org/ns/sosa/",
     "geo":  "http://www.opengis.net/ont/geosparql#",
     "sf":   "http://www.opengis.net/ont/sf#",
-    "dct":  "http://purl.org/dc/terms/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#",
     "envthes": "http://vocabs.lter-europe.net/EnvThes/",
-	"dbo": "http://dbpedia.org/ontology/",
-	"qudt": "http://qudt.org/schema/qudt/",
-	"unit": "http://qudt.org/vocab/unit/",
     "hyobs":"https://w3id.org/hmontology/"
   },
 
   "configuration": {
+    "shapefile": {
+      "src_crs": "EPSG:3035"
+    },
     "column_types": {
-      "id": { "column_name": "OBJECTID", "id_from_filename": null },
+      "id":   { "column_name": "ID", "id_from_filename": null },
       "date": { "column_name": null, "format": null },
       "time": { "column_name": null, "format": null },
 
       "templates_for_subject_id": {
-        "sensor":    "hyobs:sensor_{id}",
         "catchment": "hyobs:catchment_{id}",
         "geom":      "hyobs:geomPolygon_{id}"
       }
@@ -29,22 +26,13 @@
 
   "rules": {
     "@subject": { "@template": "@catchment" },
+
     "rdf:type": "envthes:30212",
     "geo:hasGeometry": "@geom",
+
     "@geom": [
       ["rdf:type", "sf:Polygon"],
       ["geo:asWKT", { "@wkt": "geometry" }]
-    ],
-    "@sensor": [
-      ["hyobs:monitorsCatchment", "@catchment"]
-    ],
-	"Area_km2": [
-	  ["@subject", "@catchment"],
-	  ["hyobs:hasCatchmentAreaKm2", [
-		["rdf:type", "qudt:QuantityValue"],
-		["qudt:numericValue", "^^xsd:decimal"],
-		["qudt:unit", "unit:KiloM2"]
-	  ]]
-	]
+    ]
   }
 }

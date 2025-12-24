@@ -1,0 +1,472 @@
+{
+  "prefixes": {
+    "rdf":  "http://www.w3.org/1999/02/22-rdf-syntax-ns#",
+    "sosa": "http://www.w3.org/ns/sosa/",
+    "qudt": "http://qudt.org/schema/qudt/",
+    "unit": "http://qudt.org/vocab/unit/",
+    "hyobs": "https://w3id.org/hmontology/",
+    "xsd":  "http://www.w3.org/2001/XMLSchema#",
+    "chebi": "http://purl.obolibrary.org/obo/CHEBI_"
+  },
+
+  "configuration": {
+    "csv": {
+      "delimiter": ",",
+      "encoding": "utf-8"
+    },
+    "column_types": {
+      "id": {
+        "column_name": "OBJECTID",
+        "id_from_filename": null
+      },
+      "date": {
+        "column_name": "Date",
+        "format": "%Y-%m-%d"
+      },
+      "time": {
+        "column_name": null,
+        "format": null
+      },
+      "templates_for_subject_id": {
+        "catchment":  "hyobs:catchment_{id}",
+        "sensor":     "hyobs:sensor_{id}",
+        "collection": "sosa:observationCollection_{id}",
+        "observation":"hyobs:observation_{id}_{rowIndex}_{slug}",
+        "geom":       "hyobs:geomPoint_{id}"
+      }
+    }
+  },
+
+  "rules": {
+	"pre": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:30106"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM"]
+      ]]
+    ],
+
+    "pet": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21210"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:MilliM-PER-DAY"]
+      ]]
+    ],
+
+    "tavg": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "envthes:21524"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type","qudt:QuantityValue"],
+        ["qudt:numericValue","^^xsd:decimal"],
+        ["qudt:unit","unit:DEG_C"]
+      ]]
+    ],
+
+    "n_Q": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:DischargeSampleCount"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:integer"]
+      ]]
+    ],
+
+    "n_C": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:ConcentrationSampleCount"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:integer"]
+      ]]
+    ],
+
+    "n_FNC": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:FlowNormalizedConcentrationSampleCount"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:integer"]
+      ]]
+    ],
+
+    "median_Q": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:DischargeMedian"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:M3-PER-SEC"]
+      ]]
+    ],
+
+    "mean_Q": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:DischargeMean"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:M3-PER-SEC"]
+      ]]
+    ],
+
+    "median_C": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty",
+        ["select", "$solute",
+          ["Cl",   "hyobs:ClConcentrationMedian"],
+          ["NO3N", "hyobs:NO3NConcentrationMedian"],
+          ["PO4P", "hyobs:PO4PConcentrationMedian"],
+          ["default", "hyobs:SoluteConcentrationMedian"]
+        ]
+      ],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:MilliGM-PER-L"]
+      ]]
+    ],
+
+    "mean_C": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty",
+        ["select", "$solute",
+          ["Cl",   "hyobs:ClConcentrationMean"],
+          ["NO3N", "hyobs:NO3NConcentrationMean"],
+          ["PO4P", "hyobs:PO4PConcentrationMean"],
+          ["default", "hyobs:SoluteConcentrationMean"]
+        ]
+      ],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:MilliGM-PER-L"]
+      ]]
+    ],
+
+    "qwmean_C": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteConcentrationFlowWeightedMean"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:MilliGM-PER-L"]
+      ]]
+    ],
+
+    "load_C": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteLoadSum"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:KiloGM"]
+      ]]
+    ],
+
+    "mean_Flux": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteMassFluxMean"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:KiloGM-PER-DAY"]
+      ]]
+    ],
+
+    "median_FNC": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteConcentrationFlowNormalizedMedian"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:MilliGM-PER-L"]
+      ]]
+    ],
+
+    "mean_FNC": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteConcentrationFlowNormalizedMean"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:MilliGM-PER-L"]
+      ]]
+    ],
+
+    "mean_FNFlux": [
+      ["@subject", "@observation"],
+      ["rdf:type", "sosa:Observation"],
+      ["sosa:observedProperty", "hyobs:SoluteMassFluxFlowNormalizedMean"],
+      ["hyobs:hasAnalyte",
+        ["select", "$solute",
+          ["Cl",   "chebi:17996"],
+          ["NO3N", "chebi:17632"],
+          ["NH4N", "chebi:28938"],
+          ["PO4P", "chebi:18367"],
+          ["SO4",  "chebi:16189"],
+          ["Ca",   "chebi:29108"],
+          ["Mg",   "chebi:18420"],
+          ["DIN",  "hyobs:DissolvedInorganicNitrogen"],
+          ["DOC",  "hyobs:DissolvedOrganicCarbon"],
+          ["TOC",  "hyobs:TotalOrganicCarbon"],
+          ["TN",   "hyobs:TotalNitrogen"],
+          ["TP",   "hyobs:TotalPhosphorus"],
+          ["default", "hyobs:UnknownAnalyte"]
+        ]
+      ],
+      ["sosa:usedProcedure", "hyobs:WRTDS"],
+      ["sosa:hasFeatureOfInterest", "@catchment"],
+      ["sosa:madeBySensor", "@sensor"],
+      ["sosa:memberOf", "@collection"],
+      ["sosa:resultTime", "@resultTime"],
+      ["sosa:hasResult", [
+        ["rdf:type", "qudt:QuantityValue"],
+        ["qudt:numericValue", "^^xsd:decimal"],
+        ["qudt:unit", "unit:KiloGM-PER-DAY"]
+      ]]
+    ]
+  }
+}

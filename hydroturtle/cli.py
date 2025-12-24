@@ -32,8 +32,10 @@ def main():
     sp_shp.add_argument("shapefile")
     sp_shp.add_argument("mapping")
     sp_shp.add_argument("out")
-    sp_shp.add_argument("--id-field", default="OBJECTID")
-    sp_shp.add_argument("--src-crs", default=None)
+    sp_shp.add_argument("--id-field", default=None,
+                        help="ID field in SHP table (if omitted, uses mapping configuration)")
+    sp_shp.add_argument("--src-crs", default=None,
+                        help="Override source CRS (if omitted, uses mapping configuration)")
     sp_shp.add_argument("--json-encoding", default="utf-8")
 
     args = ap.parse_args()

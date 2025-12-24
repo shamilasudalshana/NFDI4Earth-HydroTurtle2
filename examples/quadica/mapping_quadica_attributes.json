@@ -5,21 +5,38 @@
     "sosa": "http://www.w3.org/ns/sosa/",
     "qudt": "http://qudt.org/schema/qudt/",
     "unit": "http://qudt.org/vocab/unit/",
-    "hyobs":"https://w3id.org/hmontology/",
-    "envthes":"http://vocabs.lter-europe.net/EnvThes/",
-    "schema":"http://schema.org/",
+    "hyobs": "https://w3id.org/hmontology/",
+    "envthes": "http://vocabs.lter-europe.net/EnvThes/",
+    "schema": "http://schema.org/",
     "xsd":  "http://www.w3.org/2001/XMLSchema#"
   },
 
-  "context": {
-    "columns": { "id": "OBJECTID", "date": null, "time": null },
-    "uri_templates": {
-      "catchment":  "hyobs:catchment_{id}",
-      "sensor":     "hyobs:sensor_{id}",
-      "collection": "sosa:observationCollection_{id}",
-      "observation":"hyobs:observation_{id}_{rowIndex}_{slug}"
+  "configuration": {
+    "csv": {
+      "delimiter": ",",
+      "encoding": "utf-8"
     },
-    "time_defaults": {}
+    "column_types": {
+      "id": {
+        "column_name": "OBJECTID",
+        "id_from_filename": null
+      },
+      "date": {
+        "column_name": null,
+        "format": null
+      },
+      "time": {
+        "column_name": null,
+        "format": null
+      },
+      "templates_for_subject_id": {
+        "catchment":  "hyobs:catchment_{id}",
+        "sensor":     "hyobs:sensor_{id}",
+        "collection": "sosa:observationCollection_{id}",
+        "observation":"hyobs:observation_{id}_{rowIndex}_{slug}",
+        "geom":       "hyobs:geomPoint_{id}"
+      }
+    }
   },
 
   "rules": {
