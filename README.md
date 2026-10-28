@@ -140,6 +140,11 @@ Each mapping provides:
   }
 }
 ```
+
+## 🔰 Getting started
+
+To define your own mapping and see [here](Getting Started.md)
+
 ## 📧 Contact
 - [Auriol Degbelo](https://sites.google.com/site/aurioldegbelo)
 - Shamila Sudalshana
