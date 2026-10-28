@@ -83,7 +83,6 @@ Each mapping provides:
 - `configuration.shapefile.src_crs` — optional CRS override for shapefiles
 - `rules` — what triples to emit (observations, attributes, geometries)   
 
-
 - The mapping’s `context.columns` controls ID/Date recognition:
 ```json
 "columns": { "id": "OBJECTID", "date": "Date", "time": null }
@@ -173,8 +172,6 @@ These special tokens expand using `context.uri_templates` and row values:
 ```bash
 python -m hydroturtle.cli csv <input.csv> <mapping.json> <out.ttl>
 ```
-
----
 
 ## Developer notes
 
