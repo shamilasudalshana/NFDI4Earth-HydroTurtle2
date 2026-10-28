@@ -15,7 +15,6 @@ columns/attributes become observations, attributes, and geometries.
 - Optionally support shapefiles and coordinate transformation (to WGS 84)
 - Create complex or nested triples using JSON templates
 - Generate `.ttl` files with correct prefixes and syntax
-- Command-line tool and Streamlit app included
 - Built using modular and reusable Python functions
 
 ### 🎬 Demo
