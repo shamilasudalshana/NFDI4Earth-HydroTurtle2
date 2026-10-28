@@ -149,9 +149,9 @@ To get started with defining your own mappings and performing conversion steps, 
 - Shamila Sudalshana
 
 ## 🙌 Acknowledgments
-Built using the 
+Built using the: 
 - [LamaH-CE Dataset](https://essd.copernicus.org/articles/13/4529/2021/)
-- [Camels-GB Dataset]()
-- [Quadica Dataset]()
+- Camels-GB Dataset
+- Quadica Dataset
 
 The work was funded by the German Research Foundation through the project [NFDI4Earth](https://www.nfdi4earth.de/) (DFG project no. 460036893).
