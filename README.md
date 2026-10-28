@@ -143,7 +143,7 @@ Each mapping provides:
 
 ## 🔰 Getting started
 
-To get started with defining your own mappings and performing conversion steps, see [here](Getting Started.md).
+To get started with defining your own mappings and performing conversion steps, see [here](/Getting%20Started.md).
 
 ## 📧 Contact
 - [Auriol Degbelo](https://sites.google.com/site/aurioldegbelo)
