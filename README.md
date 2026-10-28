@@ -9,7 +9,47 @@ columns/attributes become observations, attributes, and geometries.
 - **CSV → RDF:** streaming, encoding-robust, supports cross-column selection
 - **SHP → RDF:** CRS auto-detect + reprojection to CRS84, GeoSPARQL‐compliant WKT
 
----
+## 🌟 Features
+
+- Convert CSV files (with or without timestamps) into RDF
+- Optionally support shapefiles and coordinate transformation (to WGS 84)
+- Create complex or nested triples using JSON templates
+- Generate `.ttl` files with correct prefixes and syntax
+- Command-line tool and Streamlit app included
+- Built using modular and reusable Python functions
+
+### 🎬 Demo
+
+Check out the app in action:
+
+
+https://github.com/user-attachments/assets/126b819b-b3ca-4e59-a1ea-3d7d6c71e052
+
+
+## 🧪 Example RDF Output
+
+Given a row:
+```csv
+ID,YYYY,MM,DD,2m_temp_mean
+32,1981,01,19,-7.1
+```
+
+HydroTurtle generates:
+```turtle
+hyobs:observation_1_c_32 rdf:type sosa:Observation ;
+	sosa:observedProperty hyobs:AirTemperature2mMean ;
+	sosa:hasFeatureOfInterest hyobs:catchment_32 ;
+	sosa:madeBySensor hyobs:sensor_32 ;
+	sosa:memberOf sosa:observationCollection_32 ;
+	sosa:resultTime "1981-01-19T00:00:00Z"^^xsd:dateTime ;
+	sosa:hasResult [ 
+                    rdf:type  qudt:QuantityValue;
+                    qudt:numericValue  "-7.1"^^xsd:decimal;
+                    qudt:unit  unit:DEG_C] .
+```
+
+
+
 
 ## Installation
 
