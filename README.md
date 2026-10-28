@@ -145,8 +145,8 @@ Each mapping provides:
 To get started with defining your own mappings and performing conversion steps, see [here](/Getting%20Started.md).
 
 ## 📧 Contact
-- [Auriol Degbelo](https://sites.google.com/site/aurioldegbelo)
 - Shamila Sudalshana
+- [Auriol Degbelo](https://sites.google.com/site/aurioldegbelo)
 
 ## 🙌 Acknowledgments
 Built using the: 
