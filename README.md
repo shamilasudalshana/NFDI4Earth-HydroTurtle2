@@ -140,4 +140,14 @@ Each mapping provides:
   }
 }
 ```
+## 📧 Contact
+- [Auriol Degbelo](https://sites.google.com/site/aurioldegbelo)
+- Shamila Sudalshana
 
+## 🙌 Acknowledgments
+Built using the 
+- [LamaH-CE Dataset](https://essd.copernicus.org/articles/13/4529/2021/)
+- [Camels-GB Dataset]()
+- [Quadica Dataset]()
+
+The work was funded by the German Research Foundation through the project [NFDI4Earth](https://www.nfdi4earth.de/) (DFG project no. 460036893).
